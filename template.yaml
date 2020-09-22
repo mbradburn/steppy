@@ -5,5 +5,23 @@ Resources:
     Type: AWS::Serverless::StateMachine
     Properties:
       Name: !Sub ${AWS::StackName}-StateMachine
-      DefinitionUri: StateMachine.asl.yaml
+      Definition:
+        StartsAt: Start
+        States:
+          Start:
+            Type: Pass
+            Next: DoIt
+          DoIt:
+            Type: Task
+            Next: Done
+          Done:
+            Type: Pass
+            End: true
       Type: STANDARD
+      Events:
+        HourlyTradingSchedule:
+          Type: Schedule
+          Properties:
+            Description: Schedule to run the stock trading state machine every hour
+            Enabled: False
+            Schedule: "rate(1 hour)"
