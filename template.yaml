@@ -5,6 +5,7 @@ Resources:
     Type: AWS::Serverless::StateMachine
     Properties:
       Name: !Sub ${AWS::StackName}-StateMachine
+      DefinitionUri: StateMachine.asl.yaml
       Definition:
         StartsAt: Start
         States:
