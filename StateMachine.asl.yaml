@@ -1,0 +1,11 @@
+StartsAt: Start
+States:
+  Start:
+    Type: Pass
+    Next: DoIt
+  DoIt:
+    Type: Task
+    Next: Done
+  Done:
+    Type: Pass
+    End: true
