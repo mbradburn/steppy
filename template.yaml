@@ -19,10 +19,3 @@ Resources:
             Type: Pass
             End: true
       Type: STANDARD
-      Events:
-        Timer:
-          Type: Schedule
-          Properties:
-            Description: Schedule to run the stock trading state machine every hour
-            Enabled: False
-            Schedule: rate(1 hour)
