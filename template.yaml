@@ -7,13 +7,16 @@ Resources:
       Name: !Sub ${AWS::StackName}-StateMachine
       DefinitionUri: StateMachine.asl.yaml
       Type: STANDARD
-  Function:
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref Function2
+  Function2:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub ${AWS::StackName}-Function
+      FunctionName: !Sub ${AWS::StackName}-Function2
       Description: !Sub
         - Stack ${StackTagName} Environment ${EnvironmentTagName} Function ${ResourceName}
-        - ResourceName: Function
+        - ResourceName: Function2
       CodeUri: src/Function
       Handler: index.handler
       Runtime: nodejs12.x
@@ -22,12 +25,6 @@ Resources:
       Tracing: Active
       Policies:
         - AWSXrayWriteOnlyAccess
-        - LambdaInvokePolicy:
-            FunctionName: !Ref StateMachine
-      Environment:
-        Variables:
-          STATE_MACHINE_NAME: !GetAtt StateMachine.Name
-          STATE_MACHINE_ARN: !Ref StateMachine
 Parameters:
   StackTagName:
     Type: String
