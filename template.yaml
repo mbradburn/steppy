@@ -83,7 +83,7 @@ Resources:
                     {
                       "input": "$util.escapeJavaScript($input.json('$'))",
                       "name": "$context.requestId",
-                      "stateMachineArn": arn:${AWS::Partition}:${AWS::AccountId}:stateMachine:${AWS::StackId}-StateMachine
+                      "stateMachineArn": arn:${AWS::Partition}:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${AWS::StackName}-StateMachine
                     }
       EndpointConfiguration: REGIONAL
       TracingEnabled: true
