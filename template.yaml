@@ -7,34 +7,38 @@ Resources:
       Name: !Sub ${AWS::StackName}-StateMachine
       DefinitionUri: StateMachine.asl.yaml
       Logging:
-        Level: All
+        Level: ALL
         IncludeExecutionData: true
         Destinations:
-          CloudWatchLogsGroup: !Ref StateMachineLogGroup
+          - CloudWatchLogsLogGroup:
+              LogGroupArn: !Ref StateMachineLogGroup.Arn
+      Role: !GetAtt StateMachineRole.Arn
       Type: STANDARD
+  StateMachineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: states.amazonaws.com
+          Action: sts:AssumeRole
+        RoleName: !Sub ${AWS::StackName}-StateMachine-logs
+        Policies:
+          - PolicyName: Log
+            PolicyDocument:
+              Version: 2012-10-17
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - logs:CreateLogGroup
+                    - logs:CreateLogStream
+                    - logs:PutLogEvents
+                  Resource:
+                    - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group/stackery/stateMachine/${AWS::StackName}-StateMachine/*
+                    - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group/stackery/stateMachine/${AWS::StackName}-StateMachine/*:log
   StateMachineLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub /stackery/stateMachine/${AWS::StackName}-StateMachine
-  Function:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Sub ${AWS::StackName}-Function
-      Description: !Sub
-        - Stack ${StackTagName} Environment ${EnvironmentTagName} Function ${ResourceName}
-        - ResourceName: Function
-      CodeUri: src/Function
-      Handler: index.handler
-      Runtime: nodejs12.x
-      MemorySize: 3008
-      Timeout: 30
-      Tracing: Active
-      Policies:
-        - AWSXrayWriteOnlyAccess
-Parameters:
-  StackTagName:
-    Type: String
-    Description: Stack Name (injected by Stackery at deployment time)
-  EnvironmentTagName:
-    Type: String
-    Description: Environment Name (injected by Stackery at deployment time)
