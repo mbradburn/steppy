@@ -83,7 +83,7 @@ Resources:
                     {
                       "input": "$util.escapeJavaScript($input.json('$'))",
                       "name": "$context.requestId",
-                      "stateMachineArn": !GetAtt 'StateMachine.Arn'
+                      "stateMachineArn": arn:${AWS::Partition}:${AWS::AccountId}:stateMachine:${AWS::StackId}-StateMachine
                     }
       EndpointConfiguration: REGIONAL
       TracingEnabled: true
@@ -99,16 +99,16 @@ Resources:
             Principal:
               Service:
                 - apigateway.amazonaws.com
-        Policies:
-          - PolicyName: ExecuteStateMachine
-            PolicyDocument:
-              Version: 2012-10-17
-              Statement:
-                - Effect: Allow
-                  Action:
-                    - states:StartExecution
-                  Resource:
-                    - !GetAtt StateMachine.Arn
+      Policies:
+        - PolicyName: ExecuteStateMachine
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - states:StartExecution
+                Resource:
+                  - !GetAtt StateMachine.Arn
 Parameters:
   StackTagName:
     Type: String
