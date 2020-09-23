@@ -71,7 +71,7 @@ Resources:
                 '200':
                   description: default OK response
               x-amazon-apigateway-integration:
-                credentials: !GetAtt ApiStateMachineRole.Arn
+                credentials: !GetAtt ApiToStateMachineRole.Arn
                 httpMethod: POST
                 type: aws
                 uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:states:action/StartExecution
@@ -83,11 +83,11 @@ Resources:
                     {
                       "input": "$util.escapeJavaScript($input.json('$'))",
                       "name": "$context.requestId",
-                      "stateMachineArn": arn:${AWS::Partition}:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${AWS::StackName}-StateMachine
+                      "stateMachineArn": "arn:${AWS::Partition}:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${AWS::StackName}-StateMachine"
                     }
       EndpointConfiguration: REGIONAL
       TracingEnabled: true
-  ApiStateMachineRole:
+  ApiToStateMachineRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
