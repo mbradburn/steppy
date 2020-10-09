@@ -9,7 +9,7 @@ States:
     Next: SecondTaskState
   SecondTaskState:
     Type: Task
-    Resource": ${FunctionArn}
+    Resource: ${FunctionArn}
     Next: Done
   Done:
     Type: Pass
