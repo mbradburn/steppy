@@ -7,7 +7,7 @@ Resources:
       Name: !Sub ${AWS::StackName}-StateMachine
       DefinitionUri: StateMachine.asl.yaml
       DefinitionSubstitutions:
-        FunctionArn: !GetAtt Function.Arn
+        FunctionArn: xxx
       Logging:
         Level: ALL
         IncludeExecutionData: true
@@ -57,21 +57,6 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub /stackery/stateMachine/${AWS::StackName}-StateMachine
-  Function:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Sub ${AWS::StackName}-Function
-      Description: !Sub
-        - Stack ${StackTagName} Environment ${EnvironmentTagName} Function ${ResourceName}
-        - ResourceName: Function
-      CodeUri: src/Function
-      Handler: index.handler
-      Runtime: nodejs12.x
-      MemorySize: 3008
-      Timeout: 30
-      Tracing: Active
-      Policies:
-        - AWSXrayWriteOnlyAccess
 Parameters:
   StackTagName:
     Type: String
