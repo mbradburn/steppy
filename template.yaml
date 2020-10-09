@@ -6,6 +6,8 @@ Resources:
     Properties:
       Name: !Sub ${AWS::StackName}-StateMachine
       DefinitionUri: StateMachine.asl.yaml
+      DefinitionSubstitutions:
+        FunctionArn: !GetAtt Function.Arn
       Logging:
         Level: ALL
         IncludeExecutionData: true
@@ -16,13 +18,6 @@ Resources:
       Tracing:
         Enabled: true
       Type: STANDARD
-      Events:
-        ApiPOST:
-          Type: Api
-          Properties:
-            Path: /
-            Method: POST
-            RestApiId: !Ref Api
   StateMachineRole:
     Type: AWS::IAM::Role
     Properties:
@@ -50,65 +45,33 @@ Resources:
                   - logs:DescribeResourcePolicies
                   - logs:DescribeLogGroups
                 Resource: '*'
-  StateMachineLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      LogGroupName: !Sub /stackery/stateMachine/${AWS::StackName}-StateMachine
-  Api:
-    Type: AWS::Serverless::Api
-    Properties:
-      Name: !Sub
-        - ${ResourceName} From Stack ${StackTagName} Environment ${EnvironmentTagName}
-        - ResourceName: Api
-      StageName: !Ref EnvironmentAPIGatewayStageName
-      DefinitionBody:
-        swagger: '2.0'
-        info: {}
-        paths:
-          /:
-            post:
-              responses:
-                '200':
-                  description: default OK response
-              x-amazon-apigateway-integration:
-                credentials: !GetAtt ApiToStateMachineRole.Arn
-                httpMethod: POST
-                type: aws
-                uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:states:action/StartExecution
-                responses:
-                  default:
-                    statusCode: 200
-                requestTemplates:
-                  application/json: !Sub |-
-                    {
-                      "input": "$util.escapeJavaScript($input.json('$'))",
-                      "name": "$context.requestId",
-                      "stateMachineArn": "arn:${AWS::Partition}:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${AWS::StackName}-StateMachine"
-                    }
-      EndpointConfiguration: REGIONAL
-      TracingEnabled: true
-  ApiToStateMachineRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Action:
-              - sts:AssumeRole
-            Principal:
-              Service:
-                - apigateway.amazonaws.com
-      Policies:
-        - PolicyName: ExecuteStateMachine
+        - PolicyName: InvokeFunction
           PolicyDocument:
             Version: 2012-10-17
             Statement:
               - Effect: Allow
                 Action:
-                  - states:StartExecution
-                Resource:
-                  - !GetAtt StateMachine.Arn
+                  - lambda:InvokeFunction
+                Resource: !GetAtt Function.Arn
+  StateMachineLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /stackery/stateMachine/${AWS::StackName}-StateMachine
+  Function:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-Function
+      Description: !Sub
+        - Stack ${StackTagName} Environment ${EnvironmentTagName} Function ${ResourceName}
+        - ResourceName: Function
+      CodeUri: src/Function
+      Handler: index.handler
+      Runtime: nodejs12.x
+      MemorySize: 3008
+      Timeout: 30
+      Tracing: Active
+      Policies:
+        - AWSXrayWriteOnlyAccess
 Parameters:
   StackTagName:
     Type: String
@@ -116,6 +79,3 @@ Parameters:
   EnvironmentTagName:
     Type: String
     Description: Environment Name (injected by Stackery at deployment time)
-  EnvironmentAPIGatewayStageName:
-    Type: String
-    Description: Environment name used for API Gateway Stage names (injected by Stackery at deployment time)
