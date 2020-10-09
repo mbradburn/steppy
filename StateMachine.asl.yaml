@@ -2,6 +2,14 @@ StartAt: Start
 States:
   Start:
     Type: Pass
+    Next: TaskState
+  TaskState:
+    Type: Task
+    Resource: ${FunctionArn}
+    Next: SecondTaskState
+  SecondTaskState:
+    Type: Task
+    Resource": ${FunctionArn}
     Next: Done
   Done:
     Type: Pass
