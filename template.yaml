@@ -7,7 +7,7 @@ Resources:
       Name: !Sub ${AWS::StackName}-StateMachine
       DefinitionUri: StateMachine.asl.yaml
       DefinitionSubstitutions:
-        FunctionArn: xxx
+        FunctionArn: !GetAtt Function.Arn
       Logging:
         Level: ALL
         IncludeExecutionData: true
