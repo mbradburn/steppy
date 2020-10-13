@@ -7,9 +7,9 @@ States:
     Type: Task
     Resource: ${FunctionArn}
     Next: AnotherTaskState
-  AnotherTaskState:
+  QueueTask:
     Type: Task
-    Resource: ${AnotherFunctionArn}
+    Resource: ${QueueArn}
     Next: Done
   Done:
     Type: Pass

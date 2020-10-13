@@ -8,7 +8,7 @@ Resources:
       DefinitionUri: StateMachine.asl.yaml
       DefinitionSubstitutions:
         FunctionArn: !GetAtt Function.Arn
-        AnotherFunctionArn: !GetAtt AnotherFunction.Arn
+        QueueArn: !GetAtt Queue.Arn
       Logging:
         Level: ALL
         IncludeExecutionData: true
@@ -88,6 +88,10 @@ Resources:
       Tracing: Active
       Policies:
         - AWSXrayWriteOnlyAccess
+  Queue:
+    Type: AWS::SQS::Queue
+    Properties:
+      KmsMasterKeyId: alias/aws/sqs
 Parameters:
   StackTagName:
     Type: String
