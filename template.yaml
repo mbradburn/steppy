@@ -8,6 +8,7 @@ Resources:
       DefinitionUri: StateMachine.asl.yaml
       DefinitionSubstitutions:
         FunctionArn: !GetAtt Function.Arn
+        AnotherFunctionArn: !GetAtt AnotherFunction.Arn
       Logging:
         Level: ALL
         IncludeExecutionData: true
@@ -65,6 +66,21 @@ Resources:
         - Stack ${StackTagName} Environment ${EnvironmentTagName} Function ${ResourceName}
         - ResourceName: Function
       CodeUri: src/Function
+      Handler: index.handler
+      Runtime: nodejs12.x
+      MemorySize: 3008
+      Timeout: 30
+      Tracing: Active
+      Policies:
+        - AWSXrayWriteOnlyAccess
+  AnotherFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-AnotherFunction
+      Description: !Sub
+        - Stack ${StackTagName} Environment ${EnvironmentTagName} Function ${ResourceName}
+        - ResourceName: AnotherFunction
+      CodeUri: src/Function2
       Handler: index.handler
       Runtime: nodejs12.x
       MemorySize: 3008
