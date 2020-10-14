@@ -52,6 +52,11 @@ Resources:
                 Resource: !Ref DockerTask
               - Effect: Allow
                 Action:
+                  - ecs:StopTask
+                  - ecs:DescribeTasks
+                Resource: '*'
+              - Effect: Allow
+                Action:
                   - events:PutTargets
                   - events:PutRule
                   - events:DescribeRule

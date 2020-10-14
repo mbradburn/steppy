@@ -6,16 +6,6 @@ States:
   DockerTask:
     Type: Task
     Next: Done
-    Resource: arn:aws:states:::ecs:runTask.sync
-    Parameters:
-      Cluster: default
-      TaskDefinition: ${DockerTaskArn}
-      LaunchType: FARGATE
-      NetworkConfiguration:
-        AwsvpcConfiguration:
-          Subnets:
-            - subnet-1fbfec37
-          AssignPublicIp: ENABLED
   Done:
     Type: Pass
     End: true
