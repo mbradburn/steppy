@@ -7,6 +7,7 @@ Resources:
       Name: !Sub ${AWS::StackName}-StateMachine
       DefinitionUri: StateMachine.asl.yaml
       DefinitionSubstitutions:
+        DockerTaskArn: !GetAtt DockerTask.Arn
         FunctionArn: !GetAtt Function.Arn
         TableArn: !GetAtt Table.Arn
         TopicArn: !GetAtt Topic.Arn
@@ -95,6 +96,70 @@ Resources:
     Type: AWS::SNS::Topic
     Properties:
       TopicName: !Sub ${AWS::StackName}-Topic
+  DockerTask:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      ContainerDefinitions:
+        - Image: hello-world
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref DockerTaskLogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: logs
+          Name: 0
+      Cpu: 1024
+      ExecutionRoleArn: !GetAtt DockerTaskExecutionRole.Arn
+      Memory: 2048
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      TaskRoleArn: !GetAtt DockerTaskTaskRole.Arn
+      Volumes: []
+    DependsOn: DockerTaskLogGroup
+  DockerTaskLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /stackery/task/${AWS::StackName}-DockerTask/logs
+  DockerTaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${AWS::StackName}-DockerTask-execution
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: ecs-tasks.amazonaws.com
+          Action: sts:AssumeRole
+      Policies:
+        - PolicyName: DownloadDockerImagesFromECR
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !Sub arn:aws:logs:*:*:log-group:/stackery/task/${AWS::StackName}-*
+              - Effect: Allow
+                Action:
+                  - ecr:GetAuthorizationToken
+                  - ecr:BatchCheckLayerAvailability
+                  - ecr:GetDownloadUrlForLayer
+                  - ecr:BatchGetImage
+                Resource: '*'
+  DockerTaskTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${AWS::StackName}-DockerTask-task
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: ecs-tasks.amazonaws.com
+          Action: sts:AssumeRole
 Parameters:
   StackTagName:
     Type: String
