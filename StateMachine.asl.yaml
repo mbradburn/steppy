@@ -3,10 +3,10 @@ States:
   Start:
     Type: Pass
     Next: FunctionTask
-  FunctionTask:
+  DockerTask:
     Type: Task
     Next: Done
-    Resource: ${FunctionArn}
+    Resource: ${DockerTaskArn}
   Done:
     Type: Pass
     End: true

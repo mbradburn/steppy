@@ -14,7 +14,7 @@ Resources:
               LogGroupArn: !GetAtt StateMachineLogGroup.Arn
       Role: !GetAtt StateMachineRole.Arn
       DefinitionSubstitutions:
-        FunctionArn: !GetAtt Function.Arn
+        DockerTaskArn: !GetAtt DockerTask.Arn
   StateMachineRole:
     Type: AWS::IAM::Role
     Properties:
@@ -42,37 +42,81 @@ Resources:
                   - logs:DescribeResourcePolicies
                   - logs:DescribeLogGroups
                 Resource: '*'
-        - PolicyName: InvokeFunction
+        - PolicyName: InvokeDockerTask
           PolicyDocument:
             Version: 2012-10-17
             Statement:
               - Effect: Allow
                 Action:
-                  - lambda:InvokeFunction
-                Resource: !GetAtt Function.Arn
+                  - ecs:RunTask
+                  - ecs:DescribeTasks
+                Resource: !GetAtt DockerTask.Arn
   StateMachineLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub /stackery/stateMachine/${AWS::StackName}-StateMachine
-  Function:
-    Type: AWS::Serverless::Function
+  DockerTask:
+    Type: AWS::ECS::TaskDefinition
     Properties:
-      FunctionName: !Sub ${AWS::StackName}-Function
-      Description: !Sub
-        - Stack ${StackTagName} Environment ${EnvironmentTagName} Function ${ResourceName}
-        - ResourceName: Function
-      CodeUri: src/Function
-      Handler: index.handler
-      Runtime: nodejs12.x
-      MemorySize: 3008
-      Timeout: 30
-      Tracing: Active
+      ContainerDefinitions:
+        - Image: hello-world
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref DockerTaskLogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: logs
+          Name: 0
+          Environment: []
+      Cpu: 1024
+      ExecutionRoleArn: !GetAtt DockerTaskExecutionRole.Arn
+      Memory: 2048
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      TaskRoleArn: !GetAtt DockerTaskTaskRole.Arn
+      Volumes: []
+    DependsOn: DockerTaskLogGroup
+  DockerTaskLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /stackery/task/${AWS::StackName}-DockerTask/logs
+  DockerTaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${AWS::StackName}-DockerTask-execution
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: ecs-tasks.amazonaws.com
+          Action: sts:AssumeRole
       Policies:
-        - AWSXrayWriteOnlyAccess
-Parameters:
-  StackTagName:
-    Type: String
-    Description: Stack Name (injected by Stackery at deployment time)
-  EnvironmentTagName:
-    Type: String
-    Description: Environment Name (injected by Stackery at deployment time)
+        - PolicyName: DownloadDockerImagesFromECR
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !Sub arn:aws:logs:*:*:log-group:/stackery/task/${AWS::StackName}-*
+              - Effect: Allow
+                Action:
+                  - ecr:GetAuthorizationToken
+                  - ecr:BatchCheckLayerAvailability
+                  - ecr:GetDownloadUrlForLayer
+                  - ecr:BatchGetImage
+                Resource: '*'
+  DockerTaskTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${AWS::StackName}-DockerTask-task
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: ecs-tasks.amazonaws.com
+          Action: sts:AssumeRole
