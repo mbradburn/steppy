@@ -2,10 +2,19 @@ StartAt: Start
 States:
   Start:
     Type: Pass
-    Next: DockerTask
-  DockerTask:
+    Next: d
+  d:
     Type: Task
     Next: Done
+    Resource: arn:aws:states:::ecs:runTask.sync
+    Parameters:
+      Cluster: default
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          Subnets: ${DockerTaskSubnets}
+        AssignPublicIp: ENABLED
+      TaskDefinition: ${DockerTaskArn}
   Done:
     Type: Pass
     End: true
