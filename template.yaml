@@ -80,6 +80,7 @@ Resources:
         Enabled: true
       Role: !GetAtt StateMachineRole.Arn
       DefinitionSubstitutions:
+        FOO: !Ref DefaultVPCSubnets
         DockerTaskArn: !Ref DockerTask
         DockerTaskSubnets: !Ref DefaultVPCSubnets
   StateMachineRole:
@@ -138,3 +139,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub /stackery/stateMachine/${AWS::StackName}-StateMachine
+Parameters:
+  DefaultVPCSubnets:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: AWS account-specific default VPC subnets (injected by Stackery at deployment time)
