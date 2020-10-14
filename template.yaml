@@ -81,6 +81,7 @@ Resources:
       Role: !GetAtt StateMachineRole.Arn
       DefinitionSubstitutions:
         DockerTaskArn: !Ref DockerTask
+        DockerTaskSubnets: !Ref DefaultVPCSubnets
   StateMachineRole:
     Type: AWS::IAM::Role
     Properties:
