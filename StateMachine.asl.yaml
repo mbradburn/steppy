@@ -2,7 +2,11 @@ StartAt: Start
 States:
   Start:
     Type: Pass
+    Next: FunctionTask
+  FunctionTask:
+    Type: Task
     Next: Done
+    Resource: ${FunctionArn}
   Done:
     Type: Pass
     End: true
