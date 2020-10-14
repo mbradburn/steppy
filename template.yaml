@@ -16,6 +16,11 @@ Resources:
       Tracing:
         Enabled: true
       Type: STANDARD
+      DefinitionSubstitutions:
+        FunctionArn: !GetAtt Function.Arn
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref Function
   StateMachineRole:
     Type: AWS::IAM::Role
     Properties:

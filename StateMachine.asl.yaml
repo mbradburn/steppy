@@ -6,6 +6,7 @@ States:
   LambdaTask:
     Type: Task
     Next: QueueTask
+    Resource: ${FunctionArn}
   Done:
     Type: Pass
     End: true
