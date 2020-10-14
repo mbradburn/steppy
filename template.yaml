@@ -14,7 +14,7 @@ Resources:
               LogGroupArn: !GetAtt StateMachineLogGroup.Arn
       Role: !GetAtt StateMachineRole.Arn
       DefinitionSubstitutions:
-        DockerTaskArn: !GetAtt DockerTask.Arn
+        DockerTaskArn: !Ref DockerTask
   StateMachineRole:
     Type: AWS::IAM::Role
     Properties:
@@ -50,7 +50,7 @@ Resources:
                 Action:
                   - ecs:RunTask
                   - ecs:DescribeTasks
-                Resource: !GetAtt DockerTask.Arn
+                Resource: !Ref DockerTask
   StateMachineLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
@@ -67,7 +67,6 @@ Resources:
               awslogs-region: !Ref AWS::Region
               awslogs-stream-prefix: logs
           Name: 0
-          Environment: []
       Cpu: 1024
       ExecutionRoleArn: !GetAtt DockerTaskExecutionRole.Arn
       Memory: 2048

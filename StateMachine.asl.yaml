@@ -2,7 +2,7 @@ StartAt: Start
 States:
   Start:
     Type: Pass
-    Next: FunctionTask
+    Next: DockerTask
   DockerTask:
     Type: Task
     Next: Done
