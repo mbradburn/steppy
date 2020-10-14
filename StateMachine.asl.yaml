@@ -6,6 +6,7 @@ States:
   DockerTask:
     Type: Task
     Next: Done
+    Resource: ${DockerTaskArn}
   Done:
     Type: Pass
     End: true
