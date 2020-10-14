@@ -9,6 +9,7 @@ Resources:
       DefinitionSubstitutions:
         FunctionArn: !GetAtt Function.Arn
         TableArn: !GetAtt Table.Arn
+        TopicArn: !GetAtt Topic.Arn
         QueueArn: !GetAtt Queue.Arn
       Logging:
         Level: ALL
@@ -90,6 +91,10 @@ Resources:
           KeyType: HASH
       StreamSpecification:
         StreamViewType: NEW_AND_OLD_IMAGES
+  Topic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub ${AWS::StackName}-Topic
 Parameters:
   StackTagName:
     Type: String

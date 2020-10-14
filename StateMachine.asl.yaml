@@ -14,6 +14,10 @@ States:
   QueueTask:
     Type: Task
     Resource: ${QueueArn}
+    Next: TopicTask
+  TopicTask:
+    Type: Task
+    Resource: ${TopicArn}
     Next: Done
   Done:
     Type: Pass
