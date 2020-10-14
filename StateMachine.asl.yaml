@@ -3,30 +3,9 @@ States:
   Start:
     Type: Pass
     Next: DockerTask
-  DockerTask:
-    Type: Task
-    Resource: ${DockerTaskArn}
-    Next: DynamoTask
-  DyanamoTask:
-    Type: Task
-    Resource: ${TableArn}
-    Next: LambdaTask
   LambdaTask:
     Type: Task
-    Resource: ${FunctionArn}
     Next: QueueTask
-  QueueTask:
-    Type: Task
-    Resource: ${QueueArn}
-    Next: StepFunctionTask
-  StepFunctionTask:
-    Type: Task
-    Resource: ${StateMachine2Arn}
-    Next: TopicTask
-  TopicTask:
-    Type: Task
-    Resource: ${TopicArn}
-    Next: Done
   Done:
     Type: Pass
     End: true
