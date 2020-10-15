@@ -12,8 +12,12 @@ States:
       LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
-          Subnets: ${DockerTaskSubnets}
-        AssignPublicIp: ENABLED
+          AssignPublicIp: ENABLED
+          Subnets:
+            - ${DockerTaskSubnet0}
+            - ${DockerTaskSubnet1}
+            - ${DockerTaskSubnet2}
+            - ${DockerTaskSubnet3}
       TaskDefinition: ${DockerTaskArn}
   Done:
     Type: Pass
