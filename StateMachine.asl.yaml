@@ -6,10 +6,23 @@ States:
   DoIt:
     Type: Task
     Next: Done
-    Resource: arn:aws:states:::lambda:invoke
+    Resource: arn:aws:states:::ecs:runTask.sync
     Parameters:
-      FunctionName: ${FunctionArn}
-      Payload.$: $
+      Cluster: default
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          Subnets:
+            - ${DockerTaskSubnet0}
+            - ${DockerTaskSubnet1}
+            - ${DockerTaskSubnet2}
+            - ${DockerTaskSubnet3}
+      TaskDefinition: ${DockerTaskArn}
+      Overrides:
+        ContainerOverrides:
+          Environment:
+            Input.$: $
   Done:
     Type: Pass
     End: true
