@@ -9,12 +9,11 @@ States:
     Resource: arn:aws:states:::dynamodb:putItem
     Parameters:
       TableName: ${TableName}
-      Parameters:
-        Item:
-          id:
-            S.$: $.itemId
-          content:
-            S.$: $.itemContent
+      Item:
+        id:
+          S.$: $.itemId
+        content:
+          S.$: $.itemContent
   Done:
     Type: Pass
     End: true
