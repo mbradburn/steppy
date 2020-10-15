@@ -52,6 +52,14 @@ Resources:
                 Action:
                   - sns:Publish
                 Resource: !GetAtt Topic.Arn
+        - PolicyName: PublishToTopic
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sns:Publish
+                Resource: !GetAtt Topic.Arn
   StateMachineLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
