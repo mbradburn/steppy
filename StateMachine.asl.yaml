@@ -2,14 +2,14 @@ StartAt: Start
 States:
   Start:
     Type: Pass
-    Next: Publish
-  Publish:
+    Next: Send
+  Send:
     Type: Task
     Next: Done
-    Resource: arn:aws:states:::sns:publish
+    Resource: arn:aws:states:::sqs:sendMessage
     Parameters:
-      TopicArn: ${TopicArn}
-      Message.$: $.input.message
+      QueueUrl: ${QueueUrl}
+      MessageBody.$: $.message
   Done:
     Type: Pass
     End: true

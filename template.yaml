@@ -16,7 +16,7 @@ Resources:
         Enabled: true
       Role: !GetAtt StateMachineRole.Arn
       DefinitionSubstitutions:
-        TopicArn: !Ref Topic
+        QueueUrl: !Ref Queue
   StateMachineRole:
     Type: AWS::IAM::Role
     Properties:
@@ -44,19 +44,19 @@ Resources:
                   - logs:DescribeResourcePolicies
                   - logs:DescribeLogGroups
                 Resource: '*'
-        - PolicyName: PublishToTopic
+        - PolicyName: SendMessageToQueue
           PolicyDocument:
             Version: 2012-10-17
             Statement:
               - Effect: Allow
                 Action:
-                  - sns:Publish
-                Resource: !Ref Topic
+                  - sqs:SendMessage
+                Resource: !GetAtt Queue.Arn
   StateMachineLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub /stackery/stateMachine/${AWS::StackName}-StateMachine
-  Topic:
-    Type: AWS::SNS::Topic
+  Queue:
+    Type: AWS::SQS::Queue
     Properties:
-      TopicName: !Sub ${AWS::StackName}-Topic
+      KmsMasterKeyId: alias/aws/sqs
