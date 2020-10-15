@@ -2,6 +2,9 @@ StartAt: Start
 States:
   Start:
     Type: Pass
+    Next: Task
+  Task:
+    Type: Task
     Next: Done
   Done:
     Type: Pass
