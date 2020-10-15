@@ -6,9 +6,9 @@ States:
   T:
     Type: Task
     Next: Done
-    Resource: arn:aws:states:::dynamodb:putItem
     Parameters:
       TableName: ${TableName}
+    Resource: arn:aws:states:::dynamodb:putItem
   Done:
     Type: Pass
     End: true
