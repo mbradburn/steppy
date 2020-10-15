@@ -16,6 +16,8 @@ Resources:
         Enabled: true
       Type: STANDARD
       Role: !GetAtt StateMachineRole.Arn
+      DefinitionSubstitutions:
+        FunctionArn: !GetAtt Function.Arn
   StateMachineRole:
     Type: AWS::IAM::Role
     Properties:
@@ -54,6 +56,14 @@ Resources:
                   - xray:GetSamplingRules
                   - xray:GetSamplingTargets
                 Resource: '*'
+        - PolicyName: InvokeFunction
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource: !GetAtt Function.Arn
   StateMachineLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
