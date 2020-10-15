@@ -1,0 +1,15 @@
+StartAt: Start
+States:
+  Start:
+    Type: Pass
+    Next: Publish
+  Publish:
+    Type: Task
+    Next: Done
+    Resource: arn:aws:states:::sns:publish
+    Parameters:
+      TopicArn: ${TopicArn}
+      Message.$: $.input.message
+  Done:
+    Type: Pass
+    End: true
