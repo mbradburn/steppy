@@ -16,12 +16,6 @@ Resources:
         Enabled: true
       Role: !GetAtt StateMachineRole.Arn
       DefinitionSubstitutions:
-        Parameters:
-          Item:
-            id:
-              S.$: $.itemId
-            content:
-              S.$: $.itemContent
         TableName: !Ref Table
   StateMachineRole:
     Type: AWS::IAM::Role
