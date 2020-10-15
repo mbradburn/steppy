@@ -6,6 +6,9 @@ States:
   Task:
     Type: Task
     Next: Done
+    Resource: arn:aws:states:::dynamodb:putItem
+    Parameters:
+      TableName: ${TableArn}
   Done:
     Type: Pass
     End: true
