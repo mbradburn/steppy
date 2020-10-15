@@ -2,14 +2,15 @@ StartAt: Start
 States:
   Start:
     Type: Pass
-    Next: StartMachine
-  StartMachine:
+    Next: DoIt
+  DoIt:
     Type: Task
     Next: Done
     Resource: arn:aws:states:::states:startExecution
     Parameters:
       StateMachineArn: ${StateMachine2Arn}
-      Input.$: $.stateMachineInput
+      Input:
+        Comment: Hello world!
   Done:
     Type: Pass
     End: true
