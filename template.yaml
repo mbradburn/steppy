@@ -59,7 +59,7 @@ Resources:
   StateMachine2:
     Type: AWS::Serverless::StateMachine
     Properties:
-      Name: !Sub ${AWS::StackName}-StateMachine
+      Name: !Sub ${AWS::StackName}-StateMachine2
       DefinitionUri: StateMachine2.asl.yaml
       Logging:
         Level: ALL
