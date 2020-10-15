@@ -15,8 +15,6 @@ Resources:
       Tracing:
         Enabled: true
       Role: !GetAtt StateMachineRole.Arn
-      DefinitionSubstitutions:
-        TableArn: !GetAtt Table.Arn
   StateMachineRole:
     Type: AWS::IAM::Role
     Properties:
@@ -44,15 +42,6 @@ Resources:
                   - logs:DescribeResourcePolicies
                   - logs:DescribeLogGroups
                 Resource: '*'
-        - PolicyName: AccessTable
-          PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              - Effect: Allow
-                Action:
-                  - dynamodb:GetItem
-                  - dynamodb:PutItem
-                Resource: !GetAtt Table.Arn
   StateMachineLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:

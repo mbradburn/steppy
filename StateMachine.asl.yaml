@@ -2,13 +2,10 @@ StartAt: Start
 States:
   Start:
     Type: Pass
-    Next: Task
-  Task:
+    Next: T
+  T:
     Type: Task
     Next: Done
-    Resource: arn:aws:states:::dynamodb:putItem
-    Parameters:
-      TableName: ${TableArn}
   Done:
     Type: Pass
     End: true
