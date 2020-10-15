@@ -9,8 +9,7 @@ States:
     Resource: arn:aws:states:::states:startExecution
     Parameters:
       StateMachineArn: ${StateMachine2Arn}
-      Input:
-        Comment: Hello world!
+      Input.$: $
   Done:
     Type: Pass
     End: true
