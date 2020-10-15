@@ -15,8 +15,6 @@ Resources:
       Tracing:
         Enabled: true
       Role: !GetAtt StateMachineRole.Arn
-      DefinitionSubstitutions:
-        QueueUrl: !Ref Queue
   StateMachineRole:
     Type: AWS::IAM::Role
     Properties:
@@ -44,19 +42,52 @@ Resources:
                   - logs:DescribeResourcePolicies
                   - logs:DescribeLogGroups
                 Resource: '*'
-        - PolicyName: SendMessageToQueue
+  StateMachineLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /stackery/stateMachine/${AWS::StackName}-StateMachine
+  StateMachine2:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Name: !Sub ${AWS::StackName}-StateMachine
+      DefinitionUri: StateMachine2.asl.yaml
+      Logging:
+        Level: ALL
+        IncludeExecutionData: true
+        Destinations:
+          - CloudWatchLogsLogGroup:
+              LogGroupArn: !GetAtt StateMachine2LogGroup.Arn
+      Tracing:
+        Enabled: true
+      Role: !GetAtt StateMachine2Role.Arn
+  StateMachine2Role:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: states.amazonaws.com
+          Action: sts:AssumeRole
+      RoleName: !Sub ${AWS::StackName}-StateMachine2
+      Policies:
+        - PolicyName: Log
           PolicyDocument:
             Version: 2012-10-17
             Statement:
               - Effect: Allow
                 Action:
-                  - sqs:SendMessage
-                Resource: !GetAtt Queue.Arn
-  StateMachineLogGroup:
+                  - logs:CreateLogDelivery
+                  - logs:GetLogDelivery
+                  - logs:UpdateLogDelivery
+                  - logs:DeleteLogDelivery
+                  - logs:ListLogDeliveries
+                  - logs:PutResourcePolicy
+                  - logs:DescribeResourcePolicies
+                  - logs:DescribeLogGroups
+                Resource: '*'
+  StateMachine2LogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub /stackery/stateMachine/${AWS::StackName}-StateMachine
-  Queue:
-    Type: AWS::SQS::Queue
-    Properties:
-      KmsMasterKeyId: alias/aws/sqs
+      LogGroupName: !Sub /stackery/stateMachine/${AWS::StackName}-StateMachine2
