@@ -1,8 +1,0 @@
-StartAt: Start
-States:
-  Start:
-    Type: Pass
-    Next: Done
-  Done:
-    Type: Pass
-    End: true

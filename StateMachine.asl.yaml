@@ -6,10 +6,6 @@ States:
   DoIt:
     Type: Task
     Next: Done
-    Resource: arn:aws:states:::states:startExecution
-    Parameters:
-      StateMachineArn: ${StateMachine2Arn}
-      Input.$: $
   Done:
     Type: Pass
     End: true
