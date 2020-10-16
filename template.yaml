@@ -84,7 +84,3 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub /stackery/stateMachine/${AWS::StackName}-StateMachine
-  Queue:
-    Type: AWS::SQS::Queue
-    Properties:
-      KmsMasterKeyId: alias/aws/sqs
