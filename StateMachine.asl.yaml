@@ -3,9 +3,14 @@ States:
   Start:
     Type: Pass
     Next: DoIt
-  DoIt:
+  Doit:
     Type: Task
     Next: Done
+    Resource: arn:aws:states:::sns:publish
+    Parameters:
+      TopicArn: ${TopicArn}
+      Message:
+        Input.$: $
   Done:
     Type: Pass
     End: true
