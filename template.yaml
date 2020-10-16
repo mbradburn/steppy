@@ -17,7 +17,7 @@ Resources:
       Type: STANDARD
       Role: !GetAtt StateMachineRole.Arn
       DefinitionSubstitutions:
-        TopicArn: !Ref Topic
+        QueueUrl: !Ref Queue
   StateMachineRole:
     Type: AWS::IAM::Role
     Properties:
@@ -72,14 +72,18 @@ Resources:
                 Action:
                   - sns:Publish
                 Resource: !Ref Topic
+        - PolicyName: SendMessageToQueue
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sqs:SendMessage
+                Resource: !GetAtt Queue.Arn
   StateMachineLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub /stackery/stateMachine/${AWS::StackName}-StateMachine
-  Topic:
-    Type: AWS::SNS::Topic
-    Properties:
-      TopicName: !Sub ${AWS::StackName}-Topic
   Function:
     Type: AWS::Serverless::Function
     Properties:
@@ -96,15 +100,15 @@ Resources:
       Policies:
         - AWSXrayWriteOnlyAccess
       Events:
-        Topic:
-          Type: SNS
+        Queue:
+          Type: SQS
           Properties:
-            Topic: !Ref Topic
-            Region: !Select
-              - 3
-              - !Split
-                - ':'
-                - !Ref Topic
+            Queue: !GetAtt Queue.Arn
+            BatchSize: 1
+  Queue:
+    Type: AWS::SQS::Queue
+    Properties:
+      KmsMasterKeyId: alias/aws/sqs
 Parameters:
   StackTagName:
     Type: String
