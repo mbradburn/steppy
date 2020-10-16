@@ -9,7 +9,8 @@ States:
     Resource: arn:aws:states:::sns:publish
     Parameters:
       TopicArn: ${TopicArn}
-      Message.$: $
+      Message:
+        Input.$: $
   Done:
     Type: Pass
     End: true
