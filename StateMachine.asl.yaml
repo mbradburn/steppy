@@ -6,23 +6,10 @@ States:
   DoIt:
     Type: Task
     Next: Done
-    Resource: arn:aws:states:::ecs:runTask.sync
+    Resource: arn:aws:states:::sns:publish
     Parameters:
-      Cluster: default
-      LaunchType: FARGATE
-      NetworkConfiguration:
-        AwsvpcConfiguration:
-          AssignPublicIp: ENABLED
-          Subnets:
-            - ${DockerTaskSubnet0}
-            - ${DockerTaskSubnet1}
-            - ${DockerTaskSubnet2}
-            - ${DockerTaskSubnet3}
-      TaskDefinition: ${DockerTaskArn}
-      Overrides:
-        ContainerOverrides:
-          Environment:
-            Input.$: $
+      TopicArn: ${TopicArn}
+      Message.$: $
   Done:
     Type: Pass
     End: true
