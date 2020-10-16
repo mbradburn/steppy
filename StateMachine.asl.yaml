@@ -6,11 +6,6 @@ States:
   DoIt:
     Type: Task
     Next: Done
-    Resource: arn:aws:states:::sqs:sendMessage
-    Parameters:
-      QueueUrl: ${QueueUrl}
-      MessageBody:
-        Input.$: $
   Done:
     Type: Pass
     End: true
