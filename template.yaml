@@ -17,7 +17,7 @@ Resources:
       Type: STANDARD
       Role: !GetAtt StateMachineRole.Arn
       DefinitionSubstitutions:
-        TopicArn: !Ref Topic
+        FunctionArn: !GetAtt Function.Arn
   StateMachineRole:
     Type: AWS::IAM::Role
     Properties:
@@ -56,19 +56,51 @@ Resources:
                   - xray:GetSamplingRules
                   - xray:GetSamplingTargets
                 Resource: '*'
-        - PolicyName: PublishToTopic
+        - PolicyName: InvokeFunction
           PolicyDocument:
             Version: 2012-10-17
             Statement:
               - Effect: Allow
                 Action:
-                  - sns:Publish
-                Resource: !Ref Topic
+                  - lambda:InvokeFunction
+                Resource: !GetAtt Function.Arn
   StateMachineLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub /stackery/stateMachine/${AWS::StackName}-StateMachine
-  Topic:
-    Type: AWS::SNS::Topic
+  Function:
+    Type: AWS::Serverless::Function
     Properties:
-      TopicName: !Sub ${AWS::StackName}-Topic
+      FunctionName: !Sub ${AWS::StackName}-Function
+      Description: !Sub
+        - Stack ${StackTagName} Environment ${EnvironmentTagName} Function ${ResourceName}
+        - ResourceName: Function
+      CodeUri: src/Function
+      Handler: index.handler
+      Runtime: nodejs12.x
+      MemorySize: 3008
+      Timeout: 30
+      Tracing: Active
+      Policies:
+        - AWSXrayWriteOnlyAccess
+    Condition: FunctionCreateNewResource
+  FunctionExistingResource:
+    Type: Custom::StackeryExistingResource
+    Properties:
+      ServiceToken: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:stackery-agent-commander
+      Type: function
+      Data: arn:aws:lambda:us-west-2:189519246275:function:xxx-development-Function
+    Condition: FunctionUseExistingResource
+Parameters:
+  StackTagName:
+    Type: String
+    Description: Stack Name (injected by Stackery at deployment time)
+  EnvironmentTagName:
+    Type: String
+    Description: Environment Name (injected by Stackery at deployment time)
+Conditions:
+  FunctionCreateNewResource: !Equals
+    - 'false'
+    - 'true'
+  FunctionUseExistingResource: !Not
+    - Condition: FunctionCreateNewResource
