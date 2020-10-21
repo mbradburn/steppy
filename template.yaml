@@ -17,7 +17,10 @@ Resources:
       Type: STANDARD
       Role: !GetAtt StateMachineRole.Arn
       DefinitionSubstitutions:
-        FunctionArn: !GetAtt Function.Arn
+        FunctionArn: !If
+          - FunctionUseExistingResource
+          - !GetAtt FunctionExistingResource.Arn
+          - !GetAtt Function.Arn
   StateMachineRole:
     Type: AWS::IAM::Role
     Properties:
@@ -63,7 +66,10 @@ Resources:
               - Effect: Allow
                 Action:
                   - lambda:InvokeFunction
-                Resource: !GetAtt Function.Arn
+                Resource: !If
+                  - FunctionUseExistingResource
+                  - !GetAtt FunctionExistingResource.Arn
+                  - !GetAtt Function.Arn
   StateMachineLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
@@ -83,6 +89,14 @@ Resources:
       Tracing: Active
       Policies:
         - AWSXrayWriteOnlyAccess
+    Condition: FunctionCreateNewResource
+  FunctionExistingResource:
+    Type: Custom::StackeryExistingResource
+    Properties:
+      ServiceToken: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:stackery-agent-commander
+      Type: function
+      Data: arn:aws:lambda:<Region>:<AWS Account ID>:function:<Function Name>
+    Condition: FunctionUseExistingResource
 Parameters:
   StackTagName:
     Type: String
@@ -90,3 +104,9 @@ Parameters:
   EnvironmentTagName:
     Type: String
     Description: Environment Name (injected by Stackery at deployment time)
+Conditions:
+  FunctionCreateNewResource: !Equals
+    - 'false'
+    - 'true'
+  FunctionUseExistingResource: !Not
+    - Condition: FunctionCreateNewResource
