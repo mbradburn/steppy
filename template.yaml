@@ -17,10 +17,7 @@ Resources:
       Type: STANDARD
       Role: !GetAtt StateMachineRole.Arn
       DefinitionSubstitutions:
-        QueueUrl: !If
-          - QueueUseExistingResource
-          - !Ref QueueExistingResource
-          - !Ref Queue
+        StateMachine2Arn: !Ref StateMachine2
   StateMachineRole:
     Type: AWS::IAM::Role
     Properties:
@@ -59,32 +56,68 @@ Resources:
                   - xray:GetSamplingRules
                   - xray:GetSamplingTargets
                 Resource: '*'
-        - PolicyName: SendMessageToQueue
+        - PolicyName: StartExecutionOfStateMachine2
           PolicyDocument:
             Version: 2012-10-17
             Statement:
               - Effect: Allow
                 Action:
-                  - sqs:SendMessage
-                Resource: !If
-                  - QueueUseExistingResource
-                  - !GetAtt QueueExistingResource.Arn
-                  - !GetAtt Queue.Arn
-  Queue:
-    Type: AWS::SQS::Queue
+                  - states:StartExecution
+                Resource: !Ref StateMachine2
+  StateMachine2:
+    Type: AWS::Serverless::StateMachine
     Properties:
-      KmsMasterKeyId: alias/aws/sqs
-    Condition: QueueCreateNewResource
-  QueueExistingResource:
-    Type: Custom::StackeryExistingResource
+      Name: !Sub ${AWS::StackName}-StateMachine2
+      DefinitionUri: StateMachine2.asl.yaml
+      Logging:
+        Level: ALL
+        IncludeExecutionData: true
+        Destinations:
+          - CloudWatchLogsLogGroup:
+              LogGroupArn: !GetAtt StateMachine2LogGroup.Arn
+      Tracing:
+        Enabled: true
+      Type: STANDARD
+      Role: !GetAtt StateMachine2Role.Arn
+  StateMachine2Role:
+    Type: AWS::IAM::Role
     Properties:
-      ServiceToken: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:stackery-agent-commander
-      Type: queue
-      Data: arn:aws:sqs:<Region>:<AWS Account ID>:<Queue Name>
-    Condition: QueueUseExistingResource
-Conditions:
-  QueueCreateNewResource: !Equals
-    - 'false'
-    - 'true'
-  QueueUseExistingResource: !Not
-    - Condition: QueueCreateNewResource
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: states.amazonaws.com
+          Action: sts:AssumeRole
+      RoleName: !Sub ${AWS::StackName}-StateMachine2
+      Policies:
+        - PolicyName: Log
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogDelivery
+                  - logs:GetLogDelivery
+                  - logs:UpdateLogDelivery
+                  - logs:DeleteLogDelivery
+                  - logs:ListLogDeliveries
+                  - logs:PutResourcePolicy
+                  - logs:DescribeResourcePolicies
+                  - logs:DescribeLogGroups
+                Resource: '*'
+        - PolicyName: EnableXRay
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - xray:PutTraceSegments
+                  - xray:PutTelemetryRecords
+                  - xray:GetSamplingRules
+                  - xray:GetSamplingTargets
+                Resource: '*'
+  StateMachine2LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /stackery/stateMachine/${AWS::StackName}-StateMachine2
