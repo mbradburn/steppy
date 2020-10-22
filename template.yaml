@@ -17,10 +17,10 @@ Resources:
       Type: STANDARD
       Role: !GetAtt StateMachineRole.Arn
       DefinitionSubstitutions:
-        TopicArn: !If
-          - TopicUseExistingResource
-          - !Ref TopicExistingResource
-          - !Ref Topic
+        QueueUrl: !If
+          - QueueUseExistingResource
+          - !Ref QueueExistingResource
+          - !Ref Queue
   StateMachineRole:
     Type: AWS::IAM::Role
     Properties:
@@ -59,32 +59,32 @@ Resources:
                   - xray:GetSamplingRules
                   - xray:GetSamplingTargets
                 Resource: '*'
-        - PolicyName: PublishToTopic
+        - PolicyName: SendMessageToQueue
           PolicyDocument:
             Version: 2012-10-17
             Statement:
               - Effect: Allow
                 Action:
-                  - sns:Publish
+                  - sqs:SendMessage
                 Resource: !If
-                  - TopicUseExistingResource
-                  - !Ref TopicExistingResource
-                  - !Ref Topic
-  Topic:
-    Type: AWS::SNS::Topic
+                  - QueueUseExistingResource
+                  - !GetAtt QueueExistingResource.Arn
+                  - !GetAtt Queue.Arn
+  Queue:
+    Type: AWS::SQS::Queue
     Properties:
-      TopicName: !Sub ${AWS::StackName}-Topic
-    Condition: TopicCreateNewResource
-  TopicExistingResource:
+      KmsMasterKeyId: alias/aws/sqs
+    Condition: QueueCreateNewResource
+  QueueExistingResource:
     Type: Custom::StackeryExistingResource
     Properties:
       ServiceToken: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:stackery-agent-commander
-      Type: topic
-      Data: arn:aws:sns:<Region>:<AWS Account ID>:<Topic Name>
-    Condition: TopicUseExistingResource
+      Type: queue
+      Data: arn:aws:sqs:<Region>:<AWS Account ID>:<Queue Name>
+    Condition: QueueUseExistingResource
 Conditions:
-  TopicCreateNewResource: !Equals
+  QueueCreateNewResource: !Equals
     - 'false'
     - 'true'
-  TopicUseExistingResource: !Not
-    - Condition: TopicCreateNewResource
+  QueueUseExistingResource: !Not
+    - Condition: QueueCreateNewResource
