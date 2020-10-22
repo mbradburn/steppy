@@ -17,10 +17,10 @@ Resources:
       Type: STANDARD
       Role: !GetAtt StateMachineRole.Arn
       DefinitionSubstitutions:
-        TableName: !If
-          - TableUseExistingResource
-          - !Ref TableExistingResource
-          - !Ref Table
+        TopicArn: !If
+          - TopicUseExistingResource
+          - !Ref TopicExistingResource
+          - !Ref Topic
   StateMachineRole:
     Type: AWS::IAM::Role
     Properties:
@@ -59,43 +59,32 @@ Resources:
                   - xray:GetSamplingRules
                   - xray:GetSamplingTargets
                 Resource: '*'
-        - PolicyName: AccessTable
+        - PolicyName: PublishToTopic
           PolicyDocument:
             Version: 2012-10-17
             Statement:
               - Effect: Allow
                 Action:
-                  - dynamodb:DeleteItem
-                  - dynamodb:GetItem
-                  - dynamodb:PutItem
-                  - dynamodb:UpdateItem
+                  - sns:Publish
                 Resource: !If
-                  - TableUseExistingResource
-                  - !GetAtt TableExistingResource.Arn
-                  - !GetAtt Table.Arn
-  Table:
-    Type: AWS::DynamoDB::Table
+                  - TopicUseExistingResource
+                  - !Ref TopicExistingResource
+                  - !Ref Topic
+  Topic:
+    Type: AWS::SNS::Topic
     Properties:
-      AttributeDefinitions:
-        - AttributeName: id
-          AttributeType: S
-      BillingMode: PAY_PER_REQUEST
-      KeySchema:
-        - AttributeName: id
-          KeyType: HASH
-      StreamSpecification:
-        StreamViewType: NEW_AND_OLD_IMAGES
-    Condition: TableCreateNewResource
-  TableExistingResource:
+      TopicName: !Sub ${AWS::StackName}-Topic
+    Condition: TopicCreateNewResource
+  TopicExistingResource:
     Type: Custom::StackeryExistingResource
     Properties:
       ServiceToken: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:stackery-agent-commander
-      Type: table
-      Data: arn:aws:dynamodb:<Region>:<AWS Account ID>:table/<Table Name>
-    Condition: TableUseExistingResource
+      Type: topic
+      Data: arn:aws:sns:<Region>:<AWS Account ID>:<Topic Name>
+    Condition: TopicUseExistingResource
 Conditions:
-  TableCreateNewResource: !Equals
+  TopicCreateNewResource: !Equals
     - 'false'
     - 'true'
-  TableUseExistingResource: !Not
-    - Condition: TableCreateNewResource
+  TopicUseExistingResource: !Not
+    - Condition: TopicCreateNewResource
