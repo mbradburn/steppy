@@ -6,10 +6,14 @@ States:
   Doit:
     Type: Task
     Next: Done
-    Resource: arn:aws:states:::states:startExecution
+    Resource: arn:aws:states:::dynamodb:putItem
     Parameters:
-      StateMachineArn: ${StateMachine2Arn}
-      Input.$: $
+      TableName: ${TableName}
+      Item:
+        id:
+          S.$: $.itemId
+        content:
+          S.$: $.itemContent
   Done:
     Type: Pass
     End: true
