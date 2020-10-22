@@ -17,10 +17,10 @@ Resources:
       Type: STANDARD
       Role: !GetAtt StateMachineRole.Arn
       DefinitionSubstitutions:
-        FunctionArn: !If
-          - FunctionUseExistingResource
-          - !GetAtt FunctionExistingResource.Arn
-          - !GetAtt Function.Arn
+        TableName: !If
+          - TableUseExistingResource
+          - !Ref TableExistingResource
+          - !Ref Table
   StateMachineRole:
     Type: AWS::IAM::Role
     Properties:
@@ -59,54 +59,43 @@ Resources:
                   - xray:GetSamplingRules
                   - xray:GetSamplingTargets
                 Resource: '*'
-        - PolicyName: InvokeFunction
+        - PolicyName: AccessTable
           PolicyDocument:
             Version: 2012-10-17
             Statement:
               - Effect: Allow
                 Action:
-                  - lambda:InvokeFunction
+                  - dynamodb:DeleteItem
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
                 Resource: !If
-                  - FunctionUseExistingResource
-                  - !GetAtt FunctionExistingResource.Arn
-                  - !GetAtt Function.Arn
-  StateMachineLogGroup:
-    Type: AWS::Logs::LogGroup
+                  - TableUseExistingResource
+                  - !GetAtt TableExistingResource.Arn
+                  - !GetAtt Table.Arn
+  Table:
+    Type: AWS::DynamoDB::Table
     Properties:
-      LogGroupName: !Sub /stackery/stateMachine/${AWS::StackName}-StateMachine
-  Function:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Sub ${AWS::StackName}-Function
-      Description: !Sub
-        - Stack ${StackTagName} Environment ${EnvironmentTagName} Function ${ResourceName}
-        - ResourceName: Function
-      CodeUri: src/Function
-      Handler: index.handler
-      Runtime: nodejs12.x
-      MemorySize: 3008
-      Timeout: 30
-      Tracing: Active
-      Policies:
-        - AWSXrayWriteOnlyAccess
-    Condition: FunctionCreateNewResource
-  FunctionExistingResource:
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+    Condition: TableCreateNewResource
+  TableExistingResource:
     Type: Custom::StackeryExistingResource
     Properties:
       ServiceToken: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:stackery-agent-commander
-      Type: function
-      Data: arn:aws:lambda:<Region>:<AWS Account ID>:function:<Function Name>
-    Condition: FunctionUseExistingResource
-Parameters:
-  StackTagName:
-    Type: String
-    Description: Stack Name (injected by Stackery at deployment time)
-  EnvironmentTagName:
-    Type: String
-    Description: Environment Name (injected by Stackery at deployment time)
+      Type: table
+      Data: arn:aws:dynamodb:<Region>:<AWS Account ID>:table/<Table Name>
+    Condition: TableUseExistingResource
 Conditions:
-  FunctionCreateNewResource: !Equals
+  TableCreateNewResource: !Equals
     - 'false'
     - 'true'
-  FunctionUseExistingResource: !Not
-    - Condition: FunctionCreateNewResource
+  TableUseExistingResource: !Not
+    - Condition: TableCreateNewResource
