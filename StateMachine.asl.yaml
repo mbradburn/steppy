@@ -2,8 +2,8 @@ StartAt: Start
 States:
   Start:
     Type: Pass
-    Next: DoIt
-  Doit:
+    Next: TaskState
+  TaskState:
     Type: Task
     Next: Done
     Resource: getItem

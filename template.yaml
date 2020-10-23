@@ -67,6 +67,10 @@ Resources:
                   - dynamodb:PutItem
                   - dynamodb:UpdateItem
                 Resource: !GetAtt Table.Arn
+  StateMachineLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /stackery/stateMachine/${AWS::StackName}-StateMachine
   Table:
     Type: AWS::DynamoDB::Table
     Properties:
