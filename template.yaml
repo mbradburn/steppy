@@ -56,17 +56,6 @@ Resources:
                   - xray:GetSamplingRules
                   - xray:GetSamplingTargets
                 Resource: '*'
-        - PolicyName: AccessTable
-          PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              - Effect: Allow
-                Action:
-                  - dynamodb:DeleteItem
-                  - dynamodb:GetItem
-                  - dynamodb:PutItem
-                  - dynamodb:UpdateItem
-                Resource: !GetAtt Table.Arn
         - PolicyName: InvokeFunction
           PolicyDocument:
             Version: 2012-10-17
