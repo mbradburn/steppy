@@ -6,13 +6,15 @@ States:
   TaskState:
     Type: Task
     Next: Done
-    Resource: arn:aws:states:::dynamodb:putItem
+    Resource: arn:aws:states:::dynamodb:updateItem
     Parameters:
       TableName: ${TableName}
-      Item:
+      Key:
         id:
           S.$: $.id
-        content:
+      UpdateExpression: set content = :c
+      ExpressionAttributeValues:
+        ':c':
           S.$: $.content
   Done:
     Type: Pass
