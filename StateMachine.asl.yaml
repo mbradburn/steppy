@@ -6,16 +6,10 @@ States:
   TaskState:
     Type: Task
     Next: Done
-    Resource: arn:aws:states:::dynamodb:updateItem
+    Resource: arn:aws:states:::lambda:invoke
     Parameters:
-      TableName: ${TableName}
-      Key:
-        id:
-          S.$: $.id
-      UpdateExpression: set content = :c
-      ExpressionAttributeValues:
-        ':c':
-          S.$: $.content
+      FunctionName: ${FunctionArn}
+      Payload.$: $
   Done:
     Type: Pass
     End: true
