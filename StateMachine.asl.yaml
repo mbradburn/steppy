@@ -6,14 +6,12 @@ States:
   Doit:
     Type: Task
     Next: Done
-    Resource: arn:aws:states:::dynamodb:putItem
+    Resource: getItem
     Parameters:
       TableName: ${TableName}
-      Item:
+      Key:
         id:
-          S.$: $.itemId
-        content:
-          S.$: $.itemContent
+          S.$: $.id
   Done:
     Type: Pass
     End: true
