@@ -6,7 +6,7 @@ States:
   TaskState:
     Type: Task
     Next: Done
-    Resource: arn:aws:states:::dynamodb:getItem
+    Resource: arn:aws:states:::dynamodb:deleteItem
     Parameters:
       TableName: ${TableName}
       Key:
