@@ -6,10 +6,14 @@ States:
   Doit:
     Type: Task
     Next: Done
-    Resource: arn:aws:states:::lambda:invoke
+    Resource: arn:aws:states:::dynamodb:putItem
     Parameters:
-      FunctionName: ${FunctionArn}
-      Payload.$: $
+      TableName: ${TableName}
+      Item:
+        id:
+          S.$: $.itemId
+        content:
+          S.$: $.itemContent
   Done:
     Type: Pass
     End: true
