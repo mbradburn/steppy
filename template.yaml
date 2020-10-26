@@ -16,6 +16,8 @@ Resources:
         Enabled: true
       Type: STANDARD
       Role: !GetAtt StateMachineRole.Arn
+      DefinitionSubstitutions:
+        TableName: !Ref Table
   StateMachineRole:
     Type: AWS::IAM::Role
     Properties:
@@ -54,6 +56,17 @@ Resources:
                   - xray:GetSamplingRules
                   - xray:GetSamplingTargets
                 Resource: '*'
+        - PolicyName: AccessTable
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:DeleteItem
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                Resource: !GetAtt Table.Arn
   Table:
     Type: AWS::DynamoDB::Table
     Properties:
