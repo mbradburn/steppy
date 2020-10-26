@@ -6,14 +6,25 @@ States:
   TaskState:
     Type: Task
     Next: Done
-    Resource: arn:aws:states:::dynamodb:putItem
+    Resource: arn:aws:states:::ecs:runTask.sync
     Parameters:
-      TableName: ${TableName}
-      Item:
-        id:
-          S.$: $.id
-        content:
-          S.$: $.content
+      Cluster: default
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          Subnets:
+            - ${DockerTaskSubnet0}
+            - ${DockerTaskSubnet1}
+            - ${DockerTaskSubnet2}
+            - ${DockerTaskSubnet3}
+      TaskDefinition: ${DockerTaskArn}
+      Overrides:
+        ContainerOverrides:
+          - Name: '0'
+            Environment:
+              - Name: COMMENT
+                Value.$: $.Comment
   Done:
     Type: Pass
     End: true
