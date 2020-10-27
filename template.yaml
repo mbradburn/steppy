@@ -64,6 +64,10 @@ Resources:
                 Action:
                   - sns:Publish
                 Resource: !Ref Topic
+  StateMachineLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /stackery/stateMachine/${AWS::StackName}-StateMachine
   Topic:
     Type: AWS::SNS::Topic
     Properties:
