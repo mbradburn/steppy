@@ -6,10 +6,11 @@ States:
   TaskState:
     Type: Task
     Next: Done
-    Resource: arn:aws:states:::lambda:invoke
+    Resource: arn:aws:states:::sns:publish
     Parameters:
-      FunctionName: ${FunctionArn}
-      Payload.$: $
+      TopicArn: ${TopicArn}
+      Message:
+        Input.$: $
   Done:
     Type: Pass
     End: true
