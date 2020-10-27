@@ -18,6 +18,7 @@ Resources:
       Role: !GetAtt xxxRole.Arn
       DefinitionSubstitutions:
         TopicArn: !Ref yyy
+        FunctionArn: !GetAtt Function.Arn
   xxxRole:
     Type: AWS::IAM::Role
     Properties:
@@ -64,11 +65,33 @@ Resources:
                 Action:
                   - sns:Publish
                 Resource: !Ref yyy
-  xxxLogGroup:
-    Type: AWS::Logs::LogGroup
+        - PolicyName: InvokeFunction
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource: !GetAtt Function.Arn
+  Function:
+    Type: AWS::Serverless::Function
     Properties:
-      LogGroupName: !Sub /stackery/stateMachine/${AWS::StackName}-xxx
-  yyy:
-    Type: AWS::SNS::Topic
-    Properties:
-      TopicName: !Sub ${AWS::StackName}-yyy
+      FunctionName: !Sub ${AWS::StackName}-Function
+      Description: !Sub
+        - Stack ${StackTagName} Environment ${EnvironmentTagName} Function ${ResourceName}
+        - ResourceName: Function
+      CodeUri: src/Function
+      Handler: index.handler
+      Runtime: nodejs12.x
+      MemorySize: 3008
+      Timeout: 30
+      Tracing: Active
+      Policies:
+        - AWSXrayWriteOnlyAccess
+Parameters:
+  StackTagName:
+    Type: String
+    Description: Stack Name (injected by Stackery at deployment time)
+  EnvironmentTagName:
+    Type: String
+    Description: Environment Name (injected by Stackery at deployment time)
