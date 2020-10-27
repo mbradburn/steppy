@@ -6,9 +6,8 @@ States:
   TaskState:
     Type: Task
     Next: Done
-    Resource: arn:aws:states:::lambda:invoke
+    Resource: ${FunctionArn}
     Parameters:
-      FunctionName: ${FunctionArn}
       Payload.$: $
   Done:
     Type: Pass
