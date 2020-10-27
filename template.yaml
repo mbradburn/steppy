@@ -17,7 +17,7 @@ Resources:
       Type: STANDARD
       Role: !GetAtt StateMachineRole.Arn
       DefinitionSubstitutions:
-        TopicArn: !Ref Topic
+        TopicArn: !Ref xx
   StateMachineRole:
     Type: AWS::IAM::Role
     Properties:
@@ -63,12 +63,12 @@ Resources:
               - Effect: Allow
                 Action:
                   - sns:Publish
-                Resource: !Ref Topic
+                Resource: !Ref xx
   StateMachineLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub /stackery/stateMachine/${AWS::StackName}-StateMachine
-  Topic:
+  xx:
     Type: AWS::SNS::Topic
     Properties:
-      TopicName: !Sub ${AWS::StackName}-Topic
+      TopicName: !Sub ${AWS::StackName}-xx
