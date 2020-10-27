@@ -1,25 +1,24 @@
 AWSTemplateFormatVersion: 2010-09-09
 Transform: AWS::Serverless-2016-10-31
 Resources:
-  xxx:
+  StateMachine:
     Type: AWS::Serverless::StateMachine
     Properties:
-      Name: !Sub ${AWS::StackName}-xxx
+      Name: !Sub ${AWS::StackName}-StateMachine
       DefinitionUri: StateMachine.asl.yaml
       Logging:
         Level: ALL
         IncludeExecutionData: true
         Destinations:
           - CloudWatchLogsLogGroup:
-              LogGroupArn: !GetAtt xxxLogGroup.Arn
+              LogGroupArn: !GetAtt StateMachineLogGroup.Arn
       Tracing:
         Enabled: true
       Type: STANDARD
-      Role: !GetAtt xxxRole.Arn
+      Role: !GetAtt StateMachineRole.Arn
       DefinitionSubstitutions:
-        TopicArn: !Ref yyy
-        FunctionArn: !GetAtt Function.Arn
-  xxxRole:
+        TopicArn: !Ref Topic
+  StateMachineRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -29,7 +28,7 @@ Resources:
           Principal:
             Service: states.amazonaws.com
           Action: sts:AssumeRole
-      RoleName: !Sub ${AWS::StackName}-xxx
+      RoleName: !Sub ${AWS::StackName}-StateMachine
       Policies:
         - PolicyName: Log
           PolicyDocument:
@@ -64,34 +63,12 @@ Resources:
               - Effect: Allow
                 Action:
                   - sns:Publish
-                Resource: !Ref yyy
-        - PolicyName: InvokeFunction
-          PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              - Effect: Allow
-                Action:
-                  - lambda:InvokeFunction
-                Resource: !GetAtt Function.Arn
-  Function:
-    Type: AWS::Serverless::Function
+                Resource: !Ref Topic
+  StateMachineLogGroup:
+    Type: AWS::Logs::LogGroup
     Properties:
-      FunctionName: !Sub ${AWS::StackName}-Function
-      Description: !Sub
-        - Stack ${StackTagName} Environment ${EnvironmentTagName} Function ${ResourceName}
-        - ResourceName: Function
-      CodeUri: src/Function
-      Handler: index.handler
-      Runtime: nodejs12.x
-      MemorySize: 3008
-      Timeout: 30
-      Tracing: Active
-      Policies:
-        - AWSXrayWriteOnlyAccess
-Parameters:
-  StackTagName:
-    Type: String
-    Description: Stack Name (injected by Stackery at deployment time)
-  EnvironmentTagName:
-    Type: String
-    Description: Environment Name (injected by Stackery at deployment time)
+      LogGroupName: !Sub /stackery/stateMachine/${AWS::StackName}-StateMachine
+  Topic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub ${AWS::StackName}-Topic
