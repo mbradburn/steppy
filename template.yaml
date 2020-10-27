@@ -56,14 +56,6 @@ Resources:
                   - xray:GetSamplingRules
                   - xray:GetSamplingTargets
                 Resource: '*'
-        - PolicyName: PublishToTopic
-          PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              - Effect: Allow
-                Action:
-                  - sns:Publish
-                Resource: !Ref xx
         - PolicyName: InvokeFunction
           PolicyDocument:
             Version: 2012-10-17
@@ -72,6 +64,10 @@ Resources:
                 Action:
                   - lambda:InvokeFunction
                 Resource: !GetAtt Function.Arn
+  StateMachineLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /stackery/stateMachine/${AWS::StackName}-StateMachine
   Function:
     Type: AWS::Serverless::Function
     Properties:
