@@ -1,24 +1,28 @@
 AWSTemplateFormatVersion: 2010-09-09
 Transform: AWS::Serverless-2016-10-31
 Resources:
-  StateMachine:
+  Topic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub ${AWS::StackName}-Topic
+  xxx:
     Type: AWS::Serverless::StateMachine
     Properties:
-      Name: !Sub ${AWS::StackName}-StateMachine
+      Name: !Sub ${AWS::StackName}-xxx
       DefinitionUri: StateMachine.asl.yaml
       Logging:
         Level: ALL
         IncludeExecutionData: true
         Destinations:
           - CloudWatchLogsLogGroup:
-              LogGroupArn: !GetAtt StateMachineLogGroup.Arn
+              LogGroupArn: !GetAtt xxxLogGroup.Arn
       Tracing:
         Enabled: true
       Type: STANDARD
-      Role: !GetAtt StateMachineRole.Arn
+      Role: !GetAtt xxxRole.Arn
       DefinitionSubstitutions:
         TopicArn: !Ref Topic
-  StateMachineRole:
+  xxxRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -28,7 +32,7 @@ Resources:
           Principal:
             Service: states.amazonaws.com
           Action: sts:AssumeRole
-      RoleName: !Sub ${AWS::StackName}-StateMachine
+      RoleName: !Sub ${AWS::StackName}-xxx
       Policies:
         - PolicyName: Log
           PolicyDocument:
@@ -64,11 +68,7 @@ Resources:
                 Action:
                   - sns:Publish
                 Resource: !Ref Topic
-  StateMachineLogGroup:
+  xxxLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub /stackery/stateMachine/${AWS::StackName}-StateMachine
-  Topic:
-    Type: AWS::SNS::Topic
-    Properties:
-      TopicName: !Sub ${AWS::StackName}-Topic
+      LogGroupName: !Sub /stackery/stateMachine/${AWS::StackName}-xxx
