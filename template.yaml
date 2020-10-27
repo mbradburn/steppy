@@ -1,10 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 Transform: AWS::Serverless-2016-10-31
 Resources:
-  Topic:
-    Type: AWS::SNS::Topic
-    Properties:
-      TopicName: !Sub ${AWS::StackName}-Topic
   xxx:
     Type: AWS::Serverless::StateMachine
     Properties:
@@ -21,7 +17,7 @@ Resources:
       Type: STANDARD
       Role: !GetAtt xxxRole.Arn
       DefinitionSubstitutions:
-        TopicArn: !Ref Topic
+        TopicArn: !Ref yyy
   xxxRole:
     Type: AWS::IAM::Role
     Properties:
@@ -67,8 +63,12 @@ Resources:
               - Effect: Allow
                 Action:
                   - sns:Publish
-                Resource: !Ref Topic
+                Resource: !Ref yyy
   xxxLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub /stackery/stateMachine/${AWS::StackName}-xxx
+  yyy:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub ${AWS::StackName}-yyy
