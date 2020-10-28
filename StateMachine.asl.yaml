@@ -6,14 +6,11 @@ States:
   TaskState:
     Type: Task
     Next: Done
-    Resource: arn:aws:states:::dynamodb:putItem
+    Resource: arn:aws:states:::sns:publish
     Parameters:
-      TableName: ${asdfName}
-      Item:
-        id:
-          S.$: $.id
-        content:
-          S.$: $.content
+      TopicArn: ${asdfArn}
+      Message:
+        Input.$: $
   Done:
     Type: Pass
     End: true

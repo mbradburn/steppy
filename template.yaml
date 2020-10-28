@@ -17,7 +17,7 @@ Resources:
       Type: STANDARD
       Role: !GetAtt StateMachineRole.Arn
       DefinitionSubstitutions:
-        asdfName: !Ref asdf
+        asdfArn: !Ref asdf
   StateMachineRole:
     Type: AWS::IAM::Role
     Properties:
@@ -75,19 +75,19 @@ Resources:
                   - dynamodb:PutItem
                   - dynamodb:UpdateItem
                 Resource: !GetAtt asdf.Arn
+        - PolicyName: PublishToTopic
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sns:Publish
+                Resource: !Ref asdf
   StateMachineLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub /stackery/stateMachine/${AWS::StackName}-StateMachine
   asdf:
-    Type: AWS::DynamoDB::Table
+    Type: AWS::SNS::Topic
     Properties:
-      AttributeDefinitions:
-        - AttributeName: id
-          AttributeType: S
-      BillingMode: PAY_PER_REQUEST
-      KeySchema:
-        - AttributeName: id
-          KeyType: HASH
-      StreamSpecification:
-        StreamViewType: NEW_AND_OLD_IMAGES
+      TopicName: !Sub ${AWS::StackName}-asdf
