@@ -17,8 +17,7 @@ Resources:
       Type: STANDARD
       Role: !GetAtt StateMachineRole.Arn
       DefinitionSubstitutions:
-        TableName: !Ref Table
-        TableArn: !If
+        TableName: !If
           - TableUseExistingResource
           - !Ref TableExistingResource
           - !Ref Table
