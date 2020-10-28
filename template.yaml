@@ -5,6 +5,7 @@ Resources:
     Type: AWS::SQS::Queue
     Properties:
       KmsMasterKeyId: alias/aws/sqs
+    Condition: QueueCreateNewResource
   StateMachine:
     Type: AWS::Serverless::StateMachine
     Properties:
@@ -21,7 +22,10 @@ Resources:
       Type: STANDARD
       Role: !GetAtt StateMachineRole.Arn
       DefinitionSubstitutions:
-        QueueUrl: !Ref Queue
+        QueueUrl: !If
+          - QueueUseExistingResource
+          - !GetAtt QueueExistingResource.Arn
+          - !GetAtt Queue.Arn
   StateMachineRole:
     Type: AWS::IAM::Role
     Properties:
@@ -66,9 +70,25 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  - sqs:SendMessage
-                Resource: !GetAtt Queue.Arn
+                  - lambda:InvokeFunction
+                Resource: !If
+                  - QueueUseExistingResource
+                  - !GetAtt QueueExistingResource.Arn
+                  - !GetAtt Queue.Arn
   StateMachineLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub /stackery/stateMachine/${AWS::StackName}-StateMachine
+  QueueExistingResource:
+    Type: Custom::StackeryExistingResource
+    Properties:
+      ServiceToken: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:stackery-agent-commander
+      Type: queue
+      Data: arn:aws:sqs:us-west-2:189519246275:xxx-development-Queue-19FXHMWLY71JU
+    Condition: QueueUseExistingResource
+Conditions:
+  QueueCreateNewResource: !Equals
+    - 'false'
+    - 'true'
+  QueueUseExistingResource: !Not
+    - Condition: QueueCreateNewResource
