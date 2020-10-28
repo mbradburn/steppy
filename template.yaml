@@ -1,21 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 Transform: AWS::Serverless-2016-10-31
 Resources:
-  Function:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Sub ${AWS::StackName}-Function
-      Description: !Sub
-        - Stack ${StackTagName} Environment ${EnvironmentTagName} Function ${ResourceName}
-        - ResourceName: Function
-      CodeUri: src/Function
-      Handler: index.handler
-      Runtime: nodejs12.x
-      MemorySize: 3008
-      Timeout: 30
-      Tracing: Active
-      Policies:
-        - AWSXrayWriteOnlyAccess
   StateMachine:
     Type: AWS::Serverless::StateMachine
     Properties:
@@ -32,7 +17,10 @@ Resources:
       Type: STANDARD
       Role: !GetAtt StateMachineRole.Arn
       DefinitionSubstitutions:
-        FunctionArn: !GetAtt Function.Arn
+        FunctionArn: !If
+          - FunctionUseExistingResource
+          - !GetAtt FunctionExistingResource.Arn
+          - !GetAtt Function.Arn
   StateMachineRole:
     Type: AWS::IAM::Role
     Properties:
@@ -79,10 +67,41 @@ Resources:
                 Action:
                   - lambda:InvokeFunction
                 Resource: !GetAtt Function.Arn
+        - PolicyName: AccessFunction
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource: !GetAtt FunctionExistingResource.Arn
   StateMachineLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub /stackery/stateMachine/${AWS::StackName}-StateMachine
+  Function:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-Function
+      Description: !Sub
+        - Stack ${StackTagName} Environment ${EnvironmentTagName} Function ${ResourceName}
+        - ResourceName: Function
+      CodeUri: src/Function
+      Handler: index.handler
+      Runtime: nodejs12.x
+      MemorySize: 3008
+      Timeout: 30
+      Tracing: Active
+      Policies:
+        - AWSXrayWriteOnlyAccess
+    Condition: FunctionCreateNewResource
+  FunctionExistingResource:
+    Type: Custom::StackeryExistingResource
+    Properties:
+      ServiceToken: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:stackery-agent-commander
+      Type: function
+      Data: arn:aws:lambda:us-west-2:189519246275:function:xxx-development-Function
+    Condition: FunctionUseExistingResource
 Parameters:
   StackTagName:
     Type: String
@@ -90,3 +109,9 @@ Parameters:
   EnvironmentTagName:
     Type: String
     Description: Environment Name (injected by Stackery at deployment time)
+Conditions:
+  FunctionCreateNewResource: !Equals
+    - 'false'
+    - 'true'
+  FunctionUseExistingResource: !Not
+    - Condition: FunctionCreateNewResource
