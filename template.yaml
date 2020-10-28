@@ -1,6 +1,10 @@
 AWSTemplateFormatVersion: 2010-09-09
 Transform: AWS::Serverless-2016-10-31
 Resources:
+  Queue:
+    Type: AWS::SQS::Queue
+    Properties:
+      KmsMasterKeyId: alias/aws/sqs
   StateMachine:
     Type: AWS::Serverless::StateMachine
     Properties:
@@ -17,10 +21,7 @@ Resources:
       Type: STANDARD
       Role: !GetAtt StateMachineRole.Arn
       DefinitionSubstitutions:
-        TopicArn: !If
-          - TopicUseExistingResource
-          - !Ref TopicExistingResource
-          - !Ref Topic
+        QueueUrl: !Ref Queue
   StateMachineRole:
     Type: AWS::IAM::Role
     Properties:
@@ -59,36 +60,15 @@ Resources:
                   - xray:GetSamplingRules
                   - xray:GetSamplingTargets
                 Resource: '*'
-        - PolicyName: AccessTopic
+        - PolicyName: AccessQueue
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
               - Effect: Allow
                 Action:
-                  - sns:Publish
-                Resource: !If
-                  - TopicUseExistingResource
-                  - !Ref TopicExistingResource
-                  - !Ref Topic
+                  - sqs:SendMessage
+                Resource: !GetAtt Queue.Arn
   StateMachineLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub /stackery/stateMachine/${AWS::StackName}-StateMachine
-  Topic:
-    Type: AWS::SNS::Topic
-    Properties:
-      TopicName: !Sub ${AWS::StackName}-Topic
-    Condition: TopicCreateNewResource
-  TopicExistingResource:
-    Type: Custom::StackeryExistingResource
-    Properties:
-      ServiceToken: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:stackery-agent-commander
-      Type: topic
-      Data: arn:aws:sns:us-west-2:189519246275:xxx-development-Topic
-    Condition: TopicUseExistingResource
-Conditions:
-  TopicCreateNewResource: !Equals
-    - 'false'
-    - 'true'
-  TopicUseExistingResource: !Not
-    - Condition: TopicCreateNewResource
