@@ -17,7 +17,7 @@ Resources:
       Type: STANDARD
       Role: !GetAtt StateMachineRole.Arn
       DefinitionSubstitutions:
-        FunctionArn: !GetAtt Function.Arn
+        asdfArn: !GetAtt asdf.Arn
   StateMachineRole:
     Type: AWS::IAM::Role
     Properties:
@@ -56,7 +56,7 @@ Resources:
                   - xray:GetSamplingRules
                   - xray:GetSamplingTargets
                 Resource: '*'
-        - PolicyName: AccessFunction
+        - PolicyName: Accessasdf
           PolicyDocument:
             Version: 2012-10-17
             Statement:
@@ -64,25 +64,25 @@ Resources:
                 Action:
                   - lambda:InvokeFunction
                 Resource: !GetAtt asdf.Arn
-        - PolicyName: AccessFunction
+        - PolicyName: Accessasdf
           PolicyDocument:
             Version: 2012-10-17
             Statement:
               - Effect: Allow
                 Action:
                   - lambda:InvokeFunction
-                Resource: !GetAtt Function.Arn
+                Resource: !GetAtt asdf.Arn
   StateMachineLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub /stackery/stateMachine/${AWS::StackName}-StateMachine
-  Function:
+  asdf:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub ${AWS::StackName}-Function
+      FunctionName: !Sub ${AWS::StackName}-asdf
       Description: !Sub
         - Stack ${StackTagName} Environment ${EnvironmentTagName} Function ${ResourceName}
-        - ResourceName: Function
+        - ResourceName: asdf
       CodeUri: src/Function
       Handler: index.handler
       Runtime: nodejs12.x
