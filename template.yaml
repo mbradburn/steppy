@@ -1,11 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 Transform: AWS::Serverless-2016-10-31
 Resources:
-  Queue:
-    Type: AWS::SQS::Queue
-    Properties:
-      KmsMasterKeyId: alias/aws/sqs
-    Condition: QueueCreateNewResource
   StateMachine:
     Type: AWS::Serverless::StateMachine
     Properties:
@@ -24,8 +19,8 @@ Resources:
       DefinitionSubstitutions:
         QueueUrl: !If
           - QueueUseExistingResource
-          - !GetAtt QueueExistingResource.Arn
-          - !GetAtt Queue.Arn
+          - !Ref QueueExistingResource
+          - !Ref Queue
   StateMachineRole:
     Type: AWS::IAM::Role
     Properties:
@@ -79,6 +74,11 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub /stackery/stateMachine/${AWS::StackName}-StateMachine
+  Queue:
+    Type: AWS::SQS::Queue
+    Properties:
+      KmsMasterKeyId: alias/aws/sqs
+    Condition: QueueCreateNewResource
   QueueExistingResource:
     Type: Custom::StackeryExistingResource
     Properties:
