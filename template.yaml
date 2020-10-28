@@ -32,6 +32,14 @@ Resources:
       Tracing: Active
       Policies:
         - AWSXrayWriteOnlyAccess
+    Condition: FunctionCreateNewResource
+  FunctionExistingResource:
+    Type: Custom::StackeryExistingResource
+    Properties:
+      ServiceToken: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:stackery-agent-commander
+      Type: function
+      Data: arn:aws:lambda:<Region>:<AWS Account ID>:function:<Function Name>
+    Condition: FunctionUseExistingResource
 Parameters:
   StackTagName:
     Type: String
@@ -42,3 +50,9 @@ Parameters:
   EnvironmentAPIGatewayStageName:
     Type: String
     Description: Environment name used for API Gateway Stage names (injected by Stackery at deployment time)
+Conditions:
+  FunctionCreateNewResource: !Equals
+    - 'false'
+    - 'true'
+  FunctionUseExistingResource: !Not
+    - Condition: FunctionCreateNewResource
