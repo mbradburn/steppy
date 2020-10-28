@@ -84,7 +84,7 @@ Resources:
     Properties:
       ServiceToken: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:stackery-agent-commander
       Type: topic
-      Data: arn:aws:sns:us-west-2:189519246275:steppy-development-Topic
+      Data: arn:aws:sns:us-west-2:189519246275:xxx-development-Topic
     Condition: TopicUseExistingResource
 Conditions:
   TopicCreateNewResource: !Equals
