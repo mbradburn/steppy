@@ -14,6 +14,13 @@ Resources:
         paths:
           /:
             get:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !If
+                  - FunctionUseExistingResource
+                  - !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${FunctionExistingResource.Arn}/invocations
+                  - !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Function.Arn}/invocations
               responses: {}
       EndpointConfiguration: REGIONAL
       TracingEnabled: true
@@ -32,13 +39,28 @@ Resources:
       Tracing: Active
       Policies:
         - AWSXrayWriteOnlyAccess
+      Events:
+        ApiGET:
+          Type: Api
+          Properties:
+            Path: /
+            Method: GET
+            RestApiId: !Ref Api
     Condition: FunctionCreateNewResource
   FunctionExistingResource:
     Type: Custom::StackeryExistingResource
     Properties:
       ServiceToken: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:stackery-agent-commander
       Type: function
-      Data: arn:aws:lambda:<Region>:<AWS Account ID>:function:<Function Name>
+      Data: arn:aws:lambda:us-west-2:189519246275:function:xxx-development-Function
+    Condition: FunctionUseExistingResource
+  FunctionExistingResourceApiGETPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      FunctionName: !Ref FunctionExistingResource
+      SourceArn: !Sub arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${Api}/*/GET/
     Condition: FunctionUseExistingResource
 Parameters:
   StackTagName:
