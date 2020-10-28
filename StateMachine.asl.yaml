@@ -6,11 +6,25 @@ States:
   TaskState:
     Type: Task
     Next: Done
-    Resource: arn:aws:states:::sqs:sendMessage
+    Resource: arn:aws:states:::ecs:runTask.sync
     Parameters:
-      QueueUrl: ${QueueUrl}
-      MessageBody:
-        Input.$: $
+      Cluster: default
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          Subnets:
+            - ${DockerTaskSubnet0}
+            - ${DockerTaskSubnet1}
+            - ${DockerTaskSubnet2}
+            - ${DockerTaskSubnet3}
+      TaskDefinition: ${DockerTaskArn}
+      Overrides:
+        ContainerOverrides:
+          - Name: '0'
+            Environment:
+              - Name: COMMENT
+                Value.$: $.Comment
   Done:
     Type: Pass
     End: true
