@@ -6,10 +6,10 @@ States:
   TaskState:
     Type: Task
     Next: Done
-    Resource: arn:aws:states:::sns:publish
+    Resource: arn:aws:states:::sqs:sendMessage
     Parameters:
-      TopicArn: ${asdfArn}
-      Message:
+      QueueUrl: ${asdfUrl}
+      MessageBody:
         Input.$: $
   Done:
     Type: Pass

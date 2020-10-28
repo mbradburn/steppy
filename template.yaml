@@ -17,7 +17,7 @@ Resources:
       Type: STANDARD
       Role: !GetAtt StateMachineRole.Arn
       DefinitionSubstitutions:
-        asdfArn: !Ref asdf
+        asdfUrl: !Ref asdf
   StateMachineRole:
     Type: AWS::IAM::Role
     Properties:
@@ -64,30 +64,19 @@ Resources:
                 Action:
                   - lambda:InvokeFunction
                 Resource: !GetAtt asdf.Arn
-        - PolicyName: AccessTable
+        - PolicyName: SendMessageToQueue
           PolicyDocument:
             Version: 2012-10-17
             Statement:
               - Effect: Allow
                 Action:
-                  - dynamodb:DeleteItem
-                  - dynamodb:GetItem
-                  - dynamodb:PutItem
-                  - dynamodb:UpdateItem
+                  - sqs:SendMessage
                 Resource: !GetAtt asdf.Arn
-        - PolicyName: PublishToTopic
-          PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              - Effect: Allow
-                Action:
-                  - sns:Publish
-                Resource: !Ref asdf
   StateMachineLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub /stackery/stateMachine/${AWS::StackName}-StateMachine
   asdf:
-    Type: AWS::SNS::Topic
+    Type: AWS::SQS::Queue
     Properties:
-      TopicName: !Sub ${AWS::StackName}-asdf
+      KmsMasterKeyId: alias/aws/sqs
