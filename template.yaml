@@ -17,7 +17,10 @@ Resources:
       Type: STANDARD
       Role: !GetAtt StateMachineRole.Arn
       DefinitionSubstitutions:
-        TopicArn: !Ref Topic
+        TopicArn: !If
+          - TopicUseExistingResource
+          - !Ref TopicExistingResource
+          - !Ref Topic
   StateMachineRole:
     Type: AWS::IAM::Role
     Properties:
@@ -63,7 +66,10 @@ Resources:
               - Effect: Allow
                 Action:
                   - sns:Publish
-                Resource: !Ref Topic
+                Resource: !If
+                  - TopicUseExistingResource
+                  - !Ref TopicExistingResource
+                  - !Ref Topic
   StateMachineLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
@@ -72,3 +78,17 @@ Resources:
     Type: AWS::SNS::Topic
     Properties:
       TopicName: !Sub ${AWS::StackName}-Topic
+    Condition: TopicCreateNewResource
+  TopicExistingResource:
+    Type: Custom::StackeryExistingResource
+    Properties:
+      ServiceToken: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:stackery-agent-commander
+      Type: topic
+      Data: arn:aws:sns:us-west-2:189519246275:steppy-development-Topic
+    Condition: TopicUseExistingResource
+Conditions:
+  TopicCreateNewResource: !Equals
+    - 'false'
+    - 'true'
+  TopicUseExistingResource: !Not
+    - Condition: TopicCreateNewResource
