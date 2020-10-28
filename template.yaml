@@ -1,29 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 Transform: AWS::Serverless-2016-10-31
 Resources:
-  Api:
-    Type: AWS::Serverless::Api
-    Properties:
-      Name: !Sub
-        - ${ResourceName} From Stack ${StackTagName} Environment ${EnvironmentTagName}
-        - ResourceName: Api
-      StageName: !Ref EnvironmentAPIGatewayStageName
-      DefinitionBody:
-        swagger: '2.0'
-        info: {}
-        paths:
-          /:
-            get:
-              x-amazon-apigateway-integration:
-                httpMethod: POST
-                type: aws_proxy
-                uri: !If
-                  - FunctionUseExistingResource
-                  - !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${FunctionExistingResource.Arn}/invocations
-                  - !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Function.Arn}/invocations
-              responses: {}
-      EndpointConfiguration: REGIONAL
-      TracingEnabled: true
   Function:
     Type: AWS::Serverless::Function
     Properties:
@@ -39,13 +16,6 @@ Resources:
       Tracing: Active
       Policies:
         - AWSXrayWriteOnlyAccess
-      Events:
-        ApiGET:
-          Type: Api
-          Properties:
-            Path: /
-            Method: GET
-            RestApiId: !Ref Api
     Condition: FunctionCreateNewResource
   FunctionExistingResource:
     Type: Custom::StackeryExistingResource
@@ -54,14 +24,79 @@ Resources:
       Type: function
       Data: arn:aws:lambda:us-west-2:189519246275:function:xxx-development-Function
     Condition: FunctionUseExistingResource
-  FunctionExistingResourceApiGETPermission:
-    Type: AWS::Lambda::Permission
+  StateMachine:
+    Type: AWS::Serverless::StateMachine
     Properties:
-      Action: lambda:InvokeFunction
-      Principal: apigateway.amazonaws.com
-      FunctionName: !Ref FunctionExistingResource
-      SourceArn: !Sub arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${Api}/*/GET/
-    Condition: FunctionUseExistingResource
+      Name: !Sub ${AWS::StackName}-StateMachine
+      DefinitionUri: StateMachine.asl.yaml
+      Logging:
+        Level: ALL
+        IncludeExecutionData: true
+        Destinations:
+          - CloudWatchLogsLogGroup:
+              LogGroupArn: !GetAtt StateMachineLogGroup.Arn
+      Tracing:
+        Enabled: true
+      Type: STANDARD
+      Role: !GetAtt StateMachineRole.Arn
+      DefinitionSubstitutions:
+        FunctionArn: !If
+          - FunctionUseExistingResource
+          - !GetAtt FunctionExistingResource.Arn
+          - !GetAtt Function.Arn
+  StateMachineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: states.amazonaws.com
+          Action: sts:AssumeRole
+      RoleName: !Sub ${AWS::StackName}-StateMachine
+      Policies:
+        - PolicyName: Log
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogDelivery
+                  - logs:GetLogDelivery
+                  - logs:UpdateLogDelivery
+                  - logs:DeleteLogDelivery
+                  - logs:ListLogDeliveries
+                  - logs:PutResourcePolicy
+                  - logs:DescribeResourcePolicies
+                  - logs:DescribeLogGroups
+                Resource: '*'
+        - PolicyName: EnableXRay
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - xray:PutTraceSegments
+                  - xray:PutTelemetryRecords
+                  - xray:GetSamplingRules
+                  - xray:GetSamplingTargets
+                Resource: '*'
+        - PolicyName: AccessFunction
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource: !If
+                  - FunctionUseExistingResource
+                  - !GetAtt FunctionExistingResource.Arn
+                  - !GetAtt Function.Arn
+  StateMachineLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /stackery/stateMachine/${AWS::StackName}-StateMachine
 Parameters:
   StackTagName:
     Type: String
@@ -69,9 +104,6 @@ Parameters:
   EnvironmentTagName:
     Type: String
     Description: Environment Name (injected by Stackery at deployment time)
-  EnvironmentAPIGatewayStageName:
-    Type: String
-    Description: Environment name used for API Gateway Stage names (injected by Stackery at deployment time)
 Conditions:
   FunctionCreateNewResource: !Equals
     - 'false'

@@ -1,0 +1,15 @@
+StartAt: Start
+States:
+  Start:
+    Type: Pass
+    Next: TaskState
+  TaskState:
+    Type: Task
+    Next: Done
+    Resource: arn:aws:states:::lambda:invoke
+    Parameters:
+      FunctionName: ${FunctionArn}
+      Payload.$: $
+  Done:
+    Type: Pass
+    End: true
