@@ -1,85 +1,24 @@
 AWSTemplateFormatVersion: 2010-09-09
 Transform: AWS::Serverless-2016-10-31
 Resources:
-  StateMachine2:
+  StateMachine:
     Type: AWS::Serverless::StateMachine
     Properties:
-      Name: !Sub ${AWS::StackName}-StateMachine2
-      DefinitionUri: StateMachine2.asl.yaml
-      Logging:
-        Level: ALL
-        IncludeExecutionData: true
-        Destinations:
-          - CloudWatchLogsLogGroup:
-              LogGroupArn: !GetAtt StateMachine2LogGroup.Arn
-      Tracing:
-        Enabled: true
-      Type: STANDARD
-      Role: !GetAtt StateMachine2Role.Arn
-  StateMachine2Role:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          Effect: Allow
-          Principal:
-            Service: states.amazonaws.com
-          Action: sts:AssumeRole
-      RoleName: !Sub ${AWS::StackName}-StateMachine2
-      Policies:
-        - PolicyName: Log
-          PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              - Effect: Allow
-                Action:
-                  - logs:CreateLogDelivery
-                  - logs:GetLogDelivery
-                  - logs:UpdateLogDelivery
-                  - logs:DeleteLogDelivery
-                  - logs:ListLogDeliveries
-                  - logs:PutResourcePolicy
-                  - logs:DescribeResourcePolicies
-                  - logs:DescribeLogGroups
-                Resource: '*'
-        - PolicyName: EnableXRay
-          PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              - Effect: Allow
-                Action:
-                  - xray:PutTraceSegments
-                  - xray:PutTelemetryRecords
-                  - xray:GetSamplingRules
-                  - xray:GetSamplingTargets
-                Resource: '*'
-  StateMachine2LogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      LogGroupName: !Sub /stackery/stateMachine/${AWS::StackName}-StateMachine2
-  asdf:
-    Type: AWS::Serverless::StateMachine
-    Properties:
-      Name: !Sub ${AWS::StackName}-asdf
+      Name: !Sub ${AWS::StackName}-StateMachine
       DefinitionUri: StateMachine.asl.yaml
       Logging:
         Level: ALL
         IncludeExecutionData: true
         Destinations:
           - CloudWatchLogsLogGroup:
-              LogGroupArn: !GetAtt asdfLogGroup.Arn
+              LogGroupArn: !GetAtt StateMachineLogGroup.Arn
       Tracing:
         Enabled: true
       Type: STANDARD
-      Role: !GetAtt asdfRole.Arn
+      Role: !GetAtt StateMachineRole.Arn
       DefinitionSubstitutions:
-        StateMachine2Arn: !Ref StateMachine2
-  asdfLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      LogGroupName: !Sub /stackery/stateMachine/${AWS::StackName}-asdf
-  asdfRole:
+        FunctionArn: !GetAtt Function.Arn
+  StateMachineRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -89,7 +28,7 @@ Resources:
           Principal:
             Service: states.amazonaws.com
           Action: sts:AssumeRole
-      RoleName: !Sub ${AWS::StackName}-asdf
+      RoleName: !Sub ${AWS::StackName}-StateMachine
       Policies:
         - PolicyName: Log
           PolicyDocument:
@@ -117,11 +56,37 @@ Resources:
                   - xray:GetSamplingRules
                   - xray:GetSamplingTargets
                 Resource: '*'
-        - PolicyName: StartExecutionOfStateMachine2
+        - PolicyName: InvokeFunction
           PolicyDocument:
             Version: 2012-10-17
             Statement:
               - Effect: Allow
                 Action:
-                  - states:StartExecution
-                Resource: !Ref StateMachine2
+                  - lambda:InvokeFunction
+                Resource: !GetAtt Function.Arn
+  StateMachineLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /stackery/stateMachine/${AWS::StackName}-StateMachine
+  Function:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-Function
+      Description: !Sub
+        - Stack ${StackTagName} Environment ${EnvironmentTagName} Function ${ResourceName}
+        - ResourceName: Function
+      CodeUri: src/Function
+      Handler: index.handler
+      Runtime: nodejs12.x
+      MemorySize: 3008
+      Timeout: 30
+      Tracing: Active
+      Policies:
+        - AWSXrayWriteOnlyAccess
+Parameters:
+  StackTagName:
+    Type: String
+    Description: Stack Name (injected by Stackery at deployment time)
+  EnvironmentTagName:
+    Type: String
+    Description: Environment Name (injected by Stackery at deployment time)

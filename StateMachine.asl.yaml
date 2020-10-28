@@ -6,10 +6,10 @@ States:
   TaskState:
     Type: Task
     Next: Done
-    Resource: arn:aws:states:::states:startExecution
+    Resource: arn:aws:states:::lambda:invoke
     Parameters:
-      StateMachineArn: ${StateMachine2Arn}
-      Input.$: $
+      FunctionName: ${FunctionArn}
+      Payload.$: $
   Done:
     Type: Pass
     End: true
