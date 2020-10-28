@@ -66,14 +66,6 @@ Resources:
               - Effect: Allow
                 Action:
                   - lambda:InvokeFunction
-                Resource: !GetAtt Function.Arn
-        - PolicyName: AccessFunction
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - lambda:InvokeFunction
                 Resource: !GetAtt FunctionExistingResource.Arn
   StateMachineLogGroup:
     Type: AWS::Logs::LogGroup
