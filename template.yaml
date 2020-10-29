@@ -17,8 +17,8 @@ Resources:
       Type: STANDARD
       Role: !GetAtt StateMachineRole.Arn
       DefinitionSubstitutions:
-        DockerTaskSubnets: !Ref DefaultVPCSubnets
-        DockerTaskArn: !Ref DockerTask
+        DockerTaskSubnet1: !Ref VirtualNetworkPrivateSubnet1
+        DockerTaskSubnet2: !Ref VirtualNetworkPrivateSubnet2
   StateMachineRole:
     Type: AWS::IAM::Role
     Properties:
@@ -375,9 +375,6 @@ Resources:
       RouteTableId: !Ref VirtualNetworkPublicSubnetsRouteTable
       SubnetId: !Ref VirtualNetworkPublicSubnet2
 Parameters:
-  DefaultVPCSubnets:
-    Type: List<AWS::EC2::Subnet::Id>
-    Description: AWS account-specific default VPC subnets (injected by Stackery at deployment time)
   StackTagName:
     Type: String
     Description: Stack Name (injected by Stackery at deployment time)

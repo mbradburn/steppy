@@ -13,7 +13,9 @@ States:
       NetworkConfiguration:
         AwsvpcConfiguration:
           AssignPublicIp: ENABLED
-          Subnets: xxx
+          Subnets:
+            - ${DockerTaskSubnet1}
+            - ${DockerTaskSubnet2}
       TaskDefinition: ${DockerTaskArn}
       Overrides:
         ContainerOverrides:
