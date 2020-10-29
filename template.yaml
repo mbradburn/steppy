@@ -16,6 +16,20 @@ Resources:
         Enabled: true
       Type: STANDARD
       Role: !GetAtt StateMachineRole.Arn
+      DefinitionSubstitutions:
+        DockerTaskArn: !Ref DockerTask
+        DockerTaskSubnet1: !Select
+          - 0
+          - !Ref DefaultVPCSubnets
+        DockerTaskSubnet2: !Select
+          - 1
+          - !Ref DefaultVPCSubnets
+        DockerTaskSubnet3: !Select
+          - 2
+          - !Ref DefaultVPCSubnets
+        DockerTaskSubnet4: !Select
+          - 3
+          - !Ref DefaultVPCSubnets
   StateMachineRole:
     Type: AWS::IAM::Role
     Properties:
@@ -54,6 +68,31 @@ Resources:
                   - xray:GetSamplingRules
                   - xray:GetSamplingTargets
                 Resource: '*'
+        - PolicyName: AccessDockerTask
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ecs:RunTask
+                Resource: !Ref DockerTask
+              - Effect: Allow
+                Action:
+                  - ecs:StopTask
+                  - ecs:DescribeTasks
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - events:PutTargets
+                  - events:PutRule
+                  - events:DescribeRule
+                Resource: !Sub arn:aws:events:${AWS::Region}:${AWS::AccountId}:rule/StepFunctionsGetEventsForECSTaskRule
+              - Effect: Allow
+                Action:
+                  - iam:PassRole
+                Resource:
+                  - !GetAtt DockerTaskExecutionRole.Arn
+                  - !GetAtt DockerTaskTaskRole.Arn
   StateMachineLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
@@ -122,3 +161,7 @@ Resources:
           Principal:
             Service: ecs-tasks.amazonaws.com
           Action: sts:AssumeRole
+Parameters:
+  DefaultVPCSubnets:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: AWS account-specific default VPC subnets (injected by Stackery at deployment time)
