@@ -13,11 +13,7 @@ States:
       NetworkConfiguration:
         AwsvpcConfiguration:
           AssignPublicIp: ENABLED
-          Subnets:
-            - ${DockerTaskSubnet0}
-            - ${DockerTaskSubnet1}
-            - ${DockerTaskSubnet2}
-            - ${DockerTaskSubnet3}
+          Subnets: States.StringToJson($DockerTaskSubnets)
       TaskDefinition: ${DockerTaskArn}
       Overrides:
         ContainerOverrides:
