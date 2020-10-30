@@ -44,7 +44,7 @@ States:
           - Name: '0'
             Environment:
               - Name: COMMENT
-                Value.$: $.Comment
+                Value.$: $.name
   Done:
     Type: Pass
     End: true
