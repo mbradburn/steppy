@@ -1,1 +1,26 @@
-{"StartAt":"Start","States":{"Start":{"Type":"Pass","Next":"MyTaskState"},"MyTaskState":{"Type":"Task","Next":"Done","Resource":"arn:aws:states:::lambda:invoke","Parameters":{"FunctionName":"${FunctionArn}","Payload.$":"$"}},"Done":{"Type":"Pass","End":true}}}
+{
+  "StartAt": "Start",
+  "States": {
+    "Start": {
+      "Type": "Pass",
+      "Next": "MyTaskState"
+    },
+    "MyTaskState": {
+      "Type": "Task",
+      "Next": "Done",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${FunctionArn}",
+        "Payload.$": "$"
+      }
+    },
+    "Another": {
+      "Type": "Task",
+      "Next": "Done"
+    },
+    "Done": {
+      "Type": "Pass",
+      "End": true
+    }
+  }
+}
