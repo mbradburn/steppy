@@ -2,49 +2,10 @@ StartAt: Start
 States:
   Start:
     Type: Pass
-    Next: First
-  First:
-    Type: Task
     Next: TaskState
-    Resource: arn:aws:states:::ecs:runTask.sync
-    Parameters:
-      Cluster: default
-      LaunchType: FARGATE
-      NetworkConfiguration:
-        AwsvpcConfiguration:
-          AssignPublicIp: ENABLED
-          Subnets:
-            - ${DockerTask2Subnet1}
-            - ${DockerTask2Subnet2}
-            - ${DockerTask2Subnet3}
-            - ${DockerTask2Subnet4}
-      TaskDefinition: ${DockerTask2Arn}
-      Overrides:
-        ContainerOverrides:
-          - Name: '0'
-            Environment:
-              - Name: COMMENT
-                Value.$: $.Comment
   TaskState:
     Type: Task
     Next: Done
-    Resource: arn:aws:states:::ecs:runTask.sync
-    Parameters:
-      Cluster: default
-      LaunchType: FARGATE
-      NetworkConfiguration:
-        AwsvpcConfiguration:
-          AssignPublicIp: ENABLED
-          Subnets:
-            - ${DockerTaskSubnet1}
-            - ${DockerTaskSubnet2}
-      TaskDefinition: ${DockerTaskArn}
-      Overrides:
-        ContainerOverrides:
-          - Name: '0'
-            Environment:
-              - Name: COMMENT
-                Value.$: $.name
   Done:
     Type: Pass
     End: true
