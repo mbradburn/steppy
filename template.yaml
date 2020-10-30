@@ -5,7 +5,7 @@ Resources:
     Type: AWS::Serverless::StateMachine
     Properties:
       Name: !Sub ${AWS::StackName}-StateMachine
-      DefinitionUri: StateMachine.asl.json
+      DefinitionUri: StateMachine.asl.yaml
       Logging:
         Level: ALL
         IncludeExecutionData: true
