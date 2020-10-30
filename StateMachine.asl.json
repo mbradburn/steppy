@@ -1,0 +1,17 @@
+{
+  "StartAt": "Start",
+  "States": {
+    "Start": {
+      "Type": "Pass",
+      "Next": "MyTaskState"
+    },
+    "MyTaskState": {
+      "Type": "Task",
+      "Next": "Done"
+    },
+    "Done": {
+      "Type": "Pass",
+      "End": true
+    }
+  }
+}
