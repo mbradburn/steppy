@@ -10,9 +10,6 @@ States:
     Parameters:
       FunctionName: ${FunctionArn}
       Payload.$: $
-  Another:
-    Type: Task
-    Next: Done
   Done:
     Type: Pass
     End: true
