@@ -5,7 +5,6 @@ Resources:
     Type: AWS::Serverless::StateMachine
     Properties:
       Name: !Sub ${AWS::StackName}-StateMachine
-      DefinitionUri: StateMachine.asl.yaml
       Logging:
         Level: ALL
         IncludeExecutionData: true
@@ -16,6 +15,7 @@ Resources:
         Enabled: true
       Type: STANDARD
       Role: !GetAtt StateMachineRole.Arn
+      DefinitionUri: StateMachine.asl.yaml
       DefinitionSubstitutions:
         FunctionArn: !GetAtt Function.Arn
   StateMachineRole:
@@ -56,14 +56,6 @@ Resources:
                   - xray:GetSamplingRules
                   - xray:GetSamplingTargets
                 Resource: '*'
-        - PolicyName: AccessFunction
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - lambda:InvokeFunction
-                Resource: !GetAtt Function.Arn
   StateMachineLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
