@@ -16,6 +16,8 @@ States:
           Subnets:
             - ${DockerTaskSubnet1}
             - ${DockerTaskSubnet2}
+            - ${DockerTaskSubnet3}
+            - ${DockerTaskSubnet4}
       TaskDefinition: ${DockerTaskArn}
       Overrides:
         ContainerOverrides:
